@@ -1,23 +1,27 @@
-#pragma once
-#include <sys/socket.h>
-#include <string>
-#include <iostream>
-#include <csignal>
-# define KNRM  "\x1B[0m"
-# define KRED  "\x1B[31m"
-# define KGRN  "\x1B[32m"
-# define KYEL  "\x1B[33m"
-# define KBLU  "\x1B[34m"
-# define KMAG  "\x1B[35m"
-# define KCYN  "\x1B[36m"
-# define KWHT  "\x1B[37m"
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
-class Client
-{
-	private:
-	int fd;
-	std::string IPad;
-	public:
-		Client();
-		~Client();
+#include <string>
+#include <set>
+
+class Client {
+public:
+    Client();
+    Client(int fd, const std::string &host);
+
+    int fd;
+    std::string host;
+    std::string nick;
+    std::string user;
+    std::string realname;
+    bool passOk;
+    bool registered;
+    bool quit;
+    std::string inbuf;
+    std::string outbuf;
+    std::set<std::string> channels;
+
+    std::string prefix() const;
 };
+
+#endif
