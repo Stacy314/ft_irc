@@ -71,6 +71,7 @@ void Server::rebuildPollfds() {
         _pfds.push_back(c);
     }
 }
+//Only 1 poll() (or equivalent) can be used for handling all these operations 
 
 void Server::run() {
     std::cout << "ircserv listening on port " << _port << std::endl;

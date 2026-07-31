@@ -1,11 +1,14 @@
 #include "../incl/Server.hpp"
 #include "../incl/Utils.hpp"
+#include "../incl/Parser.hpp"
+#include "../incl/Command.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
 
 //You must not develop an IRC client.
 //You must not implement server-to-server communication.
+//Forking is prohibited.
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -36,3 +39,32 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
+
+//#include "../incl/Parser.hpp"
+//#include "../incl/Command.hpp"
+//#include <iostream>
+
+//static void printResult(const Command &cmd)
+//{
+//    std::cout << "Command: " << cmd.getName() << std::endl;
+
+//    const std::vector<std::string> &params = cmd.getParameters();
+
+//    for (std::size_t i = 0; i < params.size(); ++i)
+//    {
+//        std::cout << "param[" << i << "] = "
+//                  << params[i] << std::endl;
+//    }
+//}
+
+//int main()
+//{
+//    Command cmd = Parser::parse(
+//        "PRIVMSG #general :Hello everyone"
+//    );
+
+//    printResult(cmd);
+
+//    return 0;
+//}

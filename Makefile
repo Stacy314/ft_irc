@@ -1,9 +1,10 @@
 NAME     = ircserv
 CXX		 = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -MMD -MP
-SRC		 = src/main.cpp src/Server.cpp src/Client.cpp src/Channel.cpp src/Utils.cpp
-OBJ		 = $(SRC:.cpp=.o)
-DEP		 = $(SRC:.cpp=.d)
+SRC		 = src/main.cpp src/Server.cpp src/Client.cpp src/Channel.cpp src/Utils.cpp src/Parser.cpp src/Command.cpp
+OBJ_DIR  = obj
+OBJ      = $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
+DEP      = $(OBJ:.o=.d)
 RM 		 = rm -f
 
 all: $(NAME)
@@ -11,6 +12,9 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	$(CXX) $(OBJ) $(CXXFLAGS) -o $@
 
+$(OBJ_DIR)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 -include $(DEP)
 
@@ -28,7 +32,7 @@ run: all
 	./$(NAME)
 	
 clean:
-	$(RM) $(OBJ) $(DEP)
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	$(RM) $(NAME)
