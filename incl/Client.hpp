@@ -15,9 +15,10 @@
 class Client
 {
 	private:
-	int fd;
-	std::string IPad;
+		int fd;
+		std::string IPad;
 	public:
 		Client();
 		~Client();
+		std::string getNick() const;
 };
