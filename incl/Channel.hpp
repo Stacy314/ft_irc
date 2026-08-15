@@ -1,5 +1,4 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once 
 
 #include <string>
 #include <set>
@@ -8,7 +7,6 @@ class Channel {
 public:
     Channel();
     Channel(const std::string &name);
-
     std::string name;
     std::string topic;
     std::string key;
@@ -18,10 +16,7 @@ public:
     std::set<int> members;
     std::set<int> operators;
     std::set<int> invited;
-
     bool has(int fd) const;
     bool isOp(int fd) const;
     std::string modes() const;
 };
-
-#endif

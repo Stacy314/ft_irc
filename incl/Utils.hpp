@@ -1,5 +1,4 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once 
 
 #include <string>
 #include <vector>
@@ -14,4 +13,3 @@ std::string intToString(int n);
 void skipSpaces(const std::string &line, std::size_t &position);
 
 
-#endif

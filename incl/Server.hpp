@@ -1,5 +1,4 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once 
 
 #include "Client.hpp"
 #include "Channel.hpp"
@@ -9,11 +8,6 @@
 #include <poll.h>
 
 class Server {
-public:
-    Server(int port, const std::string &password);
-    ~Server();
-    void run();
-
 private:
     int _port;
     std::string _password;
@@ -22,7 +16,6 @@ private:
     std::map<int, Client> _clients;
     std::map<std::string, Channel> _channels;
     std::vector<struct pollfd> _pfds;
-
     void setupSocket();
     void rebuildPollfds();
     void acceptClient();
@@ -31,15 +24,12 @@ private:
     void disconnectClient(int fd, const std::string &reason);
     void processLine(Client &c, const std::string &line);
     void tryRegister(Client &c);
-
     void queue(int fd, const std::string &msg);
     void numeric(Client &c, int code, const std::string &msg);
     void broadcast(Channel &ch, const std::string &msg, int exceptFd);
     void sendNames(Client &c, Channel &ch);
-    Client *findNick(const std::string &nick);
     bool nickInUse(const std::string &nick) const;
     std::string serverName() const;
-
     void cmdPass(Client &c, const std::vector<std::string> &p);
     void cmdNick(Client &c, const std::vector<std::string> &p);
     void cmdUser(Client &c, const std::vector<std::string> &p);
@@ -54,6 +44,12 @@ private:
     void cmdMode(Client &c, const std::vector<std::string> &p);
     void cmdCap(Client &c, const std::vector<std::string> &p);
     void cmdWho(Client &c, const std::vector<std::string> &p);
-};
 
-#endif
+public:
+    Server(int port, const std::string &password);
+    ~Server();
+    void run();
+    const std::string &getPassword() const;
+    Client *findNick(const std::string &nick);
+
+};

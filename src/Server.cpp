@@ -475,3 +475,8 @@ void Server::cmdWho(Client &c, const std::vector<std::string> &p) {
     }
     numeric(c, 315, name + " :End of /WHO list");
 }
+
+const std::string &Server::getPassword() const
+{
+    return _password;
+}
