@@ -9,15 +9,19 @@
 enum ChannelResult
 {
 	SUCCESS,
-	NOT_ON_CHANNEL,
+    NO_CHANGE,
+    CHANNEL_EMPTY, // success
+    // ---------------------------
+	NOT_IN_CHANNEL, //441, TARGET
+    NOT_ON_CHANNEL, //442, ACTOR
     ALREADY_MEMBER,
 	NOT_OPERATOR,
     BAD_KEY,
     INVITE_ONLY,
-    CHANNEL_FULL
+    CHANNEL_FULL // error codes
 };
 
-struct memberInfo
+struct MemberInfo
 {
     bool isOp;
     size_t userId;
@@ -27,7 +31,7 @@ class Channel
 {
     private:
         std::string						name;
-        std::map<Client*, memberInfo>	members;
+        std::map<Client*, MemberInfo>	members;
         std::set<std::string>			invite;
         std::string						topic;
         std::string						key;
@@ -40,10 +44,11 @@ class Channel
         Channel& operator=(const Channel&);
         Channel();
 
-		std::map<Client*, memberInfo>::iterator			getMember(Client* memb);
-		std::map<Client*, memberInfo>::const_iterator	getMember(Client* memb) const;
-		bool											isValidKey(const std::string& key) const;
+		std::map<Client*, MemberInfo>::iterator			findMember(Client* memb);
+		std::map<Client*, MemberInfo>::const_iterator	findMember(Client* memb) const;
+		bool											acceptsKey(const std::string& key) const;
 		bool											isInvited(Client* memb) const;
+        void                                            ensureOperator();
     public:
         Channel(const std::string&);
         ~Channel();
@@ -51,7 +56,7 @@ class Channel
         size_t          size() const;
         bool            isMember(Client*) const;
         bool            isOperator(Client*) const;
-        ChannelResult			setOperator(Client*, bool);
+        ChannelResult	setOperator(Client*, Client*, bool);
 		ChannelResult	setTopic(const std::string&, Client*);
         ChannelResult   addMember(Client*, const std::string& key);
 		ChannelResult   removeMember(Client*); //QUIT
