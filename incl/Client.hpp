@@ -21,4 +21,5 @@ class Client
 		Client();
 		~Client();
 		std::string getNick() const;
+
 };
