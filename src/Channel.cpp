@@ -5,26 +5,43 @@ Channel::Channel(const std::string& channelName) : name(channelName),
 
 Channel::~Channel() {}
 
-std::map<Client*, memberInfo>::iterator Channel::getMember(Client* memb)
+std::map<Client*, MemberInfo>::iterator Channel::findMember(Client* memb)
 	{ return members.find(memb); }
 
-std::map<Client*, memberInfo>::const_iterator Channel::getMember(Client* memb) const
+std::map<Client*, MemberInfo>::const_iterator Channel::findMember(Client* memb) const
 	{ return members.find(memb); }
 
 bool	Channel::isEmpty() const { return (members.empty()); }
 
 size_t	Channel::size() const { return members.size(); }
 
+void	Channel::ensureOperator()
+{
+	std::map<Client*, MemberInfo>::iterator it
+		= members.begin();
+	std::map<Client*, MemberInfo>::iterator newOp
+		= members.begin();
+	while (it != members.end())
+	{
+		if (it->second.isOp)
+			return ;
+		else if (it->second.userId < newOp->second.userId)
+			newOp = it;
+		++it;
+	}
+	newOp->second.isOp = true;
+}
+
 bool	Channel::isMember(Client* memb) const
-	{ return (getMember(memb) != members.end()); }
+	{ return (findMember(memb) != members.end()); }
 
 bool	Channel::isOperator(Client* memb) const
 {
-	std::map<Client*, memberInfo>::const_iterator it = getMember(memb);
+	std::map<Client*, MemberInfo>::const_iterator it = findMember(memb);
 	return (it != members.end() && it->second.isOp);
 }
 
-bool	Channel::isValidKey(const std::string& key) const
+bool	Channel::acceptsKey(const std::string& key) const
 {
 	return (this->key.empty() || this->key == key);
 }
@@ -35,20 +52,41 @@ bool	Channel::isInvited(Client* memb) const
 	return (it != invite.end());
 }
 
-ChannelResult	Channel::setOperator(Client* memb, bool status) //more things to check
+ChannelResult	Channel::setOperator(Client* actor,
+	Client* target, bool status)
 {
-	if (!isMember(memb))
+	if (!isMember(actor))
 		return NOT_ON_CHANNEL;
+	if (!isOperator(actor))
+		return NOT_OPERATOR;
 
-	getMember(memb)->second.isOp = status;
-	return SUCCESS;
+	if (!isMember(target))
+		return NOT_IN_CHANNEL;
+
+	std::map<Client*, MemberInfo>::iterator trgt
+		= findMember(target);
+	if (trgt->second.isOp != status)
+	{
+		trgt->second.isOp = status;
+		if (!status)
+			ensureOperator();
+		return SUCCESS;
+	}
+	return NO_CHANGE;
 }
 
 ChannelResult   Channel::removeMember(Client* memb) //also a lot of things to check
 {
 	if (!isMember(memb))
-		return NOT_ON_CHANNEL;
+		return NOT_IN_CHANNEL;
+
 	members.erase(memb);
+
+	if (isEmpty())
+		return CHANNEL_EMPTY;
+	else
+		ensureOperator();
+
 	return SUCCESS;
 }
 
@@ -56,7 +94,7 @@ ChannelResult   Channel::kickMember(Client* actor, Client* victim) // need to ad
 {
 	if (!isMember(actor))
 		return NOT_ON_CHANNEL;
-	if (getMember(actor)->second.isOp == false)
+	if (findMember(actor)->second.isOp == false)
 		return NOT_OPERATOR;
 	return (removeMember(victim));
 }
@@ -65,7 +103,7 @@ ChannelResult   Channel::inviteMember(Client* host, Client* invited) // need to 
 {
 	if (!isMember(host))
 		return NOT_ON_CHANNEL;
-	if (getMember(host)->second.isOp == false)
+	if (findMember(host)->second.isOp == false)
 		return NOT_OPERATOR;
 	invite.insert(invited->getNick());
 	return SUCCESS;
@@ -74,8 +112,8 @@ ChannelResult   Channel::inviteMember(Client* host, Client* invited) // need to 
 ChannelResult   Channel::setInviteOnly(bool status, Client* memb)
 {
 	if (!isMember(memb))
-		return NOT_ON_CHANNEL;
-	if (getMember(memb)->second.isOp == false)
+		return NOT_IN_CHANNEL;
+	if (findMember(memb)->second.isOp == false)
 		return NOT_OPERATOR;
 	inviteOnly = status;
 	return SUCCESS;
@@ -84,8 +122,8 @@ ChannelResult   Channel::setInviteOnly(bool status, Client* memb)
 ChannelResult   Channel::setProtectedTopic(bool status, Client* memb)
 {
 	if (!isMember(memb))
-		return NOT_ON_CHANNEL;
-	if (getMember(memb)->second.isOp == false)
+		return NOT_IN_CHANNEL;
+	if (findMember(memb)->second.isOp == false)
 		return NOT_OPERATOR;
 	protectedTopic = status;
 	return SUCCESS;
@@ -94,8 +132,8 @@ ChannelResult   Channel::setProtectedTopic(bool status, Client* memb)
 ChannelResult   Channel::setUserLimit(size_t limit, Client* memb)
 {
 	if (!isMember(memb))
-		return NOT_ON_CHANNEL;
-	if (getMember(memb)->second.isOp == false)
+		return NOT_IN_CHANNEL;
+	if (findMember(memb)->second.isOp == false)
 		return NOT_OPERATOR;
 	userLimit = limit;
 	return SUCCESS;
@@ -104,8 +142,8 @@ ChannelResult   Channel::setUserLimit(size_t limit, Client* memb)
 ChannelResult   Channel::setKey(const std::string& key, Client* memb)
 {
 	if (!isMember(memb))
-		return NOT_ON_CHANNEL;
-	if (getMember(memb)->second.isOp == false)
+		return NOT_IN_CHANNEL;
+	if (findMember(memb)->second.isOp == false)
 		return NOT_OPERATOR;
 	this->key = key;
 	return SUCCESS;
@@ -114,7 +152,7 @@ ChannelResult   Channel::setKey(const std::string& key, Client* memb)
 ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 {
 	//initializing operator status && counter
-	memberInfo info;
+	MemberInfo info;
 	info.userId = counter;
 	if (isEmpty())
 		info.isOp = true;	
@@ -122,7 +160,7 @@ ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 		info.isOp = false;
 	
 	//verifying if the key is valid
-	if (!this->key.empty() && !isValidKey(key))
+	if (!this->key.empty() && !acceptsKey(key))
 		return BAD_KEY;
 
 	//checking if the channel is full
@@ -134,7 +172,7 @@ ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 		return INVITE_ONLY;
 
 	//trying to add a new member
-	std::pair<std::map<Client*, memberInfo>::iterator, bool> res
+	std::pair<std::map<Client*, MemberInfo>::iterator, bool> res
 		= members.insert(std::make_pair(newMemb, info));
 	if (!res.second)
 		return ALREADY_MEMBER;
