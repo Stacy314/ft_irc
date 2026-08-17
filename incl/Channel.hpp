@@ -6,7 +6,16 @@
 #include "Client.hpp"
 #include <cstddef>
 
-typedef int ChannelResult;
+enum ChannelResult
+{
+	SUCCESS,
+	NOT_ON_CHANNEL,
+    ALREADY_MEMBER,
+	NOT_OPERATOR,
+    BAD_KEY,
+    INVITE_ONLY,
+    CHANNEL_FULL
+};
 
 struct memberInfo
 {
@@ -44,7 +53,7 @@ class Channel
         bool            isOperator(Client*) const;
         ChannelResult			setOperator(Client*, bool);
 		ChannelResult	setTopic(const std::string&, Client*);
-        ChannelResult   addMember(Client*);
+        ChannelResult   addMember(Client*, const std::string& key);
 		ChannelResult   removeMember(Client*); //QUIT
 		ChannelResult   kickMember(Client*, Client*); //KICK
 		ChannelResult   inviteMember(Client*, Client*); //INVITE
