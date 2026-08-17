@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <poll.h>
 #include <vector>
+#include "../incl/Client.hpp"
+#include <map>
+#include <utility>
 
 # define KNRM  "\x1B[0m"
 # define KRED  "\x1B[31m"
@@ -30,6 +33,7 @@ class Server
 		int serverFd;
 		bool runing;
 		std::vector<pollfd> pollfds;
+		std::map<int, Client> clients;
 	public:
 		Server();
 		Server(size_t  port, const std::string &password);
@@ -47,6 +51,8 @@ class Server
 		void listenSocket();
 		void pollLoop();
 		void addPollfd(int fd);
+		void	acceptClient();
+		void	reciveCom();
 
 
 };

@@ -93,6 +93,23 @@ void Server::addPollfd(int fd)
 	pollfds.push_back(pfd);
 }
 
+void	Server::acceptClient()
+{
+	int newfd;
+
+	newfd = accept(serverFd, NULL, NULL);
+	if (newfd == -1)
+		throw std::runtime_error("Failed to accept client!");
+	Client client(newfd);
+	clients.insert(std::make_pair(newfd, client));
+	addPollfd(newfd);
+}
+
+void Server::reciveCom()
+{
+	
+}
+
 void  Server::pollLoop()
 {
 	while (runing)
@@ -106,7 +123,7 @@ void  Server::pollLoop()
 				if (pollfds[i].fd == serverFd)
 					acceptClient();
 				else
-					std::cout << "NASTYa\n";
+					reciveCom();
 			}
 		}
 
@@ -120,7 +137,7 @@ void Server::start()
 	createSocket();
 	bindSocket();
 	listenSocket();
-	addPollfd();
+	addPollfd(serverFd);
 	runing = true;
 	pollLoop();
 	

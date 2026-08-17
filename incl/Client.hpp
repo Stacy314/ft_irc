@@ -19,5 +19,6 @@ class Client
 	std::string IPad;
 	public:
 		Client();
+		Client(int fd);
 		~Client();
 };
