@@ -16,11 +16,6 @@ CommandHandler &CommandHandler::operator=(const CommandHandler &other) {
 CommandHandler::~CommandHandler() {}
 
 // void CommandHandler::sendReply(Client &client, const std::string &message) {
-//     /*
-//      * Краще не викликати send() прямо тут.
-//      * Додаємо повідомлення в output buffer,
-//      * а Person 1 відправить його через poll().
-//      */
 //     client.appendToSendBuffer(message + "\r\n");
 // }
 

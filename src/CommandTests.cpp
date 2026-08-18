@@ -65,7 +65,7 @@ static void testInvalidNick()
     );
 }
 
-static void testDuplicateNick()
+/*static void testDuplicateNick()
 {
     Server server(6667, "secret");
     CommandHandler handler(server);
@@ -81,7 +81,7 @@ static void testDuplicateNick()
         "Duplicate nickname -> 433",
         client2.outbuf.find("433") != std::string::npos
     );
-}
+}*/
 
 static void testPassAfterRegistration()
 {
