@@ -129,7 +129,7 @@ so that the departing or kicked client receives them.
 
 ### Known blockers
 
-- `Client.cpp` is not listed in the Makefile; `getNick()` will not link.
+- `Client.cpp` is not listed in the Makefile; `getNickname()` will not link.
 - `Client` has no nickname field — only a descriptor and an address.
 
 ---

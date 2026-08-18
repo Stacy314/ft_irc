@@ -1,25 +1,40 @@
-#pragma once
-#include <sys/socket.h>
+#pragma once 
+
 #include <string>
-#include <iostream>
-#include <csignal>
-# define KNRM  "\x1B[0m"
-# define KRED  "\x1B[31m"
-# define KGRN  "\x1B[32m"
-# define KYEL  "\x1B[33m"
-# define KBLU  "\x1B[34m"
-# define KMAG  "\x1B[35m"
-# define KCYN  "\x1B[36m"
-# define KWHT  "\x1B[37m"
+#include <set>
 
 class Client
 {
-	private:
-		int fd;
-		std::string IPad;
-	public:
-		Client();
-		~Client();
-		std::string getNick() const;
+private:
+	bool userReceived;
+    int fd;
+	std::string host;
+    std::string nick;
+    std::string user;
+	std::string fullname;
+    bool pass;
+    bool registered;
+    bool quit;
+	
+public:
 
+    Client();
+    Client(int fd, const std::string &host);
+    Client(const Client &other);
+    Client &operator=(const Client &other);
+    ~Client();
+
+  	std::string outbuf;
+    bool isPasswordAccepted() const;
+    void setPasswordAccepted(bool value);
+    bool isRegistered() const;
+    void setRegistered(bool value);
+    const std::string &getNickname() const;
+    void setNickname(const std::string &nickname);
+    const std::string &getUsername() const;
+    void setUsername(const std::string &username);
+    const std::string &getRealname() const;
+    void setRealname(const std::string &name);
+	bool isUserReceived() const;
+	void setUserReceived(bool value);
 };

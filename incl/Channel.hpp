@@ -44,9 +44,7 @@ class Channel
         size_t							counter;
 		ChannelResult					returnCode;
 
-        Channel(const Channel&);
-        Channel& operator=(const Channel&);
-        Channel();
+  
 
 		std::map<Client*, MemberInfo>::iterator			findMember(Client*);
 		std::map<Client*, MemberInfo>::const_iterator	findMember(Client*) const;
@@ -56,6 +54,9 @@ class Channel
 		ChannelResult									accessCheck(Client*);
 		ChannelResult									accessCheck(Client*, Client*);
     public:
+		Channel& operator=(const Channel&);
+		Channel(const Channel&);
+        Channel();
         Channel(const std::string&);
         ~Channel();
         size_t          	size() const;
