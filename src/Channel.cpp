@@ -37,7 +37,8 @@ bool	Channel::isMember(Client* memb) const
 
 bool	Channel::isOperator(Client* memb) const
 {
-	std::map<Client*, MemberInfo>::const_iterator it = findMember(memb);
+	std::map<Client*, MemberInfo>::const_iterator it
+		= findMember(memb);
 	return (it != members.end() && it->second.isOp);
 }
 
@@ -48,20 +49,39 @@ bool	Channel::acceptsKey(const std::string& key) const
 
 bool	Channel::isInvited(Client* memb) const
 {
-	std::set<std::string>::const_iterator it = invite.find(memb->getNick());
+	std::set<std::string>::const_iterator it
+		= invite.find(memb->getNick());
 	return (it != invite.end());
 }
 
-ChannelResult	Channel::setOperator(Client* actor,
-	Client* target, bool status)
+ChannelResult	Channel::accessCheck(Client* actor)
 {
 	if (!isMember(actor))
 		return NOT_ON_CHANNEL;
 	if (!isOperator(actor))
 		return NOT_OPERATOR;
 
+	return SUCCESS;
+}
+
+ChannelResult	Channel::accessCheck(Client* actor, Client* target)
+{
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	if (!isMember(target))
 		return NOT_IN_CHANNEL;
+
+	return SUCCESS;
+}
+
+ChannelResult	Channel::setOperator(Client* actor,
+	Client* target, bool status)
+{
+	returnCode = accessCheck(actor, target);
+	if (returnCode != SUCCESS)
+		return returnCode;
 
 	std::map<Client*, MemberInfo>::iterator trgt
 		= findMember(target);
@@ -75,11 +95,8 @@ ChannelResult	Channel::setOperator(Client* actor,
 	return NO_CHANGE;
 }
 
-ChannelResult   Channel::removeMember(Client* memb) //also a lot of things to check
+ChannelResult   Channel::removeMember(Client* memb)
 {
-	if (!isMember(memb))
-		return NOT_IN_CHANNEL;
-
 	members.erase(memb);
 
 	if (isEmpty())
@@ -90,61 +107,78 @@ ChannelResult   Channel::removeMember(Client* memb) //also a lot of things to ch
 	return SUCCESS;
 }
 
-ChannelResult   Channel::kickMember(Client* actor, Client* victim) // need to add more checks
+ChannelResult   Channel::kickMember(Client* actor, Client* victim)
 {
-	if (!isMember(actor))
-		return NOT_ON_CHANNEL;
-	if (findMember(actor)->second.isOp == false)
-		return NOT_OPERATOR;
+	returnCode = accessCheck(actor, victim);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	return (removeMember(victim));
 }
 
-ChannelResult   Channel::inviteMember(Client* host, Client* invited) // need to add more checks
+ChannelResult   Channel::inviteMember(Client* actor, Client* invited)
 {
-	if (!isMember(host))
-		return NOT_ON_CHANNEL;
-	if (findMember(host)->second.isOp == false)
-		return NOT_OPERATOR;
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	invite.insert(invited->getNick());
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setInviteOnly(bool status, Client* memb)
+ChannelResult   Channel::setInviteOnly(bool status, Client* actor)
 {
-	if (!isMember(memb))
-		return NOT_IN_CHANNEL;
-	if (findMember(memb)->second.isOp == false)
-		return NOT_OPERATOR;
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	inviteOnly = status;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setProtectedTopic(bool status, Client* memb)
+ChannelResult   Channel::setProtectedTopic(bool status, Client* actor)
 {
-	if (!isMember(memb))
-		return NOT_IN_CHANNEL;
-	if (findMember(memb)->second.isOp == false)
-		return NOT_OPERATOR;
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	protectedTopic = status;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setUserLimit(size_t limit, Client* memb)
+ChannelResult	Channel::setTopic(const std::string& newTopic, Client* actor)
 {
-	if (!isMember(memb))
-		return NOT_IN_CHANNEL;
-	if (findMember(memb)->second.isOp == false)
-		return NOT_OPERATOR;
+	if (protectedTopic)
+	{
+		returnCode = accessCheck(actor);
+		if (returnCode != SUCCESS)
+			return returnCode;
+	}
+	else if (!isMember(actor))
+		return NOT_ON_CHANNEL;
+	
+	topic = newTopic;
+	if (topic.empty())
+		return NO_TOPIC;
+	return SUCCESS;
+}
+
+ChannelResult   Channel::setUserLimit(size_t limit, Client* actor)
+{
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	userLimit = limit;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setKey(const std::string& key, Client* memb)
+ChannelResult   Channel::setKey(const std::string& key, Client* actor)
 {
-	if (!isMember(memb))
-		return NOT_IN_CHANNEL;
-	if (findMember(memb)->second.isOp == false)
-		return NOT_OPERATOR;
+	returnCode = accessCheck(actor);
+	if (returnCode != SUCCESS)
+		return returnCode;
+
 	this->key = key;
 	return SUCCESS;
 }
