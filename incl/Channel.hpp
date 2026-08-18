@@ -8,17 +8,20 @@
 
 enum ChannelResult
 {
+	// success codes
 	SUCCESS,
     NO_CHANGE,
-    CHANNEL_EMPTY, // success
+    CHANNEL_EMPTY,
     // ---------------------------
+	// error codes
+	NO_TOPIC, //331
 	NOT_IN_CHANNEL, //441, TARGET
     NOT_ON_CHANNEL, //442, ACTOR
-    ALREADY_MEMBER,
-	NOT_OPERATOR,
-    BAD_KEY,
-    INVITE_ONLY,
-    CHANNEL_FULL // error codes
+    ALREADY_MEMBER, //443, TARGET
+	NOT_OPERATOR, // 482, ACTOR
+    CHANNEL_FULL, // 471
+    INVITE_ONLY, //473
+    BAD_KEY //475
 };
 
 struct MemberInfo
@@ -39,16 +42,19 @@ class Channel
         bool							inviteOnly;
         bool							protectedTopic;
         size_t							counter;
+		ChannelResult					returnCode;
 
         Channel(const Channel&);
         Channel& operator=(const Channel&);
         Channel();
 
-		std::map<Client*, MemberInfo>::iterator			findMember(Client* memb);
-		std::map<Client*, MemberInfo>::const_iterator	findMember(Client* memb) const;
-		bool											acceptsKey(const std::string& key) const;
-		bool											isInvited(Client* memb) const;
+		std::map<Client*, MemberInfo>::iterator			findMember(Client*);
+		std::map<Client*, MemberInfo>::const_iterator	findMember(Client*) const;
+		bool											acceptsKey(const std::string&) const;
+		bool											isInvited(Client*) const;
         void                                            ensureOperator();
+		ChannelResult									accessCheck(Client*);
+		ChannelResult									accessCheck(Client*, Client*);
     public:
         Channel(const std::string&);
         ~Channel();
@@ -58,7 +64,7 @@ class Channel
         bool            isOperator(Client*) const;
         ChannelResult	setOperator(Client*, Client*, bool);
 		ChannelResult	setTopic(const std::string&, Client*);
-        ChannelResult   addMember(Client*, const std::string& key);
+        ChannelResult   addMember(Client*, const std::string&);
 		ChannelResult   removeMember(Client*); //QUIT
 		ChannelResult   kickMember(Client*, Client*); //KICK
 		ChannelResult   inviteMember(Client*, Client*); //INVITE
