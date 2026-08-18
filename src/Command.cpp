@@ -8,8 +8,7 @@ Command::Command(const std::string &name, const std::vector<std::string> &parame
 Command::Command(const Command &other) : _name(other._name), _parameters(other._parameters) {}
 
 Command &Command::operator=(const Command &other) {
-    if (this != &other)
-    {
+    if (this != &other)     {
         _name = other._name;
         _parameters = other._parameters;
     }

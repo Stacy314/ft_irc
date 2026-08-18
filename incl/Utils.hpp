@@ -11,5 +11,5 @@ bool validNick(const std::string &nick);
 bool startsWith(const std::string &s, const std::string &prefix);
 std::string intToString(int n);
 void skipSpaces(const std::string &line, std::size_t &position);
-
+bool isNickSpecial(char c);
 

@@ -5,6 +5,38 @@ Channel::Channel(const std::string& channelName) : name(channelName),
 
 Channel::~Channel() {}
 
+Channel::Channel(const Channel &other)
+    : name(other.name),
+      members(other.members),
+      invite(other.invite),
+      topic(other.topic),
+      key(other.key),
+      userLimit(other.userLimit),
+      inviteOnly(other.inviteOnly),
+      protectedTopic(other.protectedTopic),
+      counter(other.counter),
+      returnCode(other.returnCode)
+{}
+
+Channel &Channel::operator=(const Channel &other)
+{
+    if (this != &other)
+    {
+        name = other.name;
+        members = other.members;
+        invite = other.invite;
+        topic = other.topic;
+        key = other.key;
+        userLimit = other.userLimit;
+        inviteOnly = other.inviteOnly;
+        protectedTopic = other.protectedTopic;
+        counter = other.counter;
+        returnCode = other.returnCode;
+    }
+
+    return *this;
+}
+
 std::map<Client*, MemberInfo>::iterator Channel::findMember(Client* memb)
 	{ return members.find(memb); }
 
@@ -50,7 +82,7 @@ bool	Channel::acceptsKey(const std::string& key) const
 bool	Channel::isInvited(Client* memb) const
 {
 	std::set<std::string>::const_iterator it
-		= invite.find(memb->getNick());
+		= invite.find(memb->getNickname());
 	return (it != invite.end());
 }
 
@@ -122,7 +154,7 @@ ChannelResult   Channel::inviteMember(Client* actor, Client* invited)
 	if (returnCode != SUCCESS)
 		return returnCode;
 
-	invite.insert(invited->getNick());
+	invite.insert(invited->getNickname());
 	return SUCCESS;
 }
 
@@ -212,7 +244,7 @@ ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 		return ALREADY_MEMBER;
 	
 	//erasing from invite list if existed
-	invite.erase(newMemb->getNick());
+	invite.erase(newMemb->getNickname());
 
 	//increment Id
 	counter++;

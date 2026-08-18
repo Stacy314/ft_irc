@@ -81,3 +81,10 @@ void skipSpaces(const std::string &line, std::size_t &position) {
     while (position < line.length() && std::isspace(static_cast<unsigned char>(line[position])))
         ++position;
 }
+
+bool isNickSpecial(char c)
+{
+    const std::string special = "_[]\\`^{}|";
+
+    return special.find(c) != std::string::npos;
+}
