@@ -24,6 +24,7 @@
 # define KWHT  "\x1B[37m"
 
 #include <iostream>
+#include <fcntl.h>
 #include <sstream>
 class Server
 {
@@ -52,7 +53,7 @@ class Server
 		void pollLoop();
 		void addPollfd(int fd);
 		void	acceptClient();
-		void	reciveCom();
+		void	reciveCom(int fd);
 
 
 };

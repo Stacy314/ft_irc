@@ -60,6 +60,8 @@ void Server::createSocket()
 	serverFd = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverFd == -1)
 		throw std::runtime_error("Failed to create socket");
+	if (fcntl(serverFd, F_SETFL, O_NONBLOCK) == -1)
+		throw std::runtime_error("Failed to create nonblocksocket");
 	int opt = 1;
 	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 			throw std::runtime_error("Failed to set socket option!");
@@ -100,14 +102,18 @@ void	Server::acceptClient()
 	newfd = accept(serverFd, NULL, NULL);
 	if (newfd == -1)
 		throw std::runtime_error("Failed to accept client!");
+	if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1)
+		throw std::runtime_error("Failed to create nonblocksocket");
 	Client client(newfd);
 	clients.insert(std::make_pair(newfd, client));
 	addPollfd(newfd);
 }
 
-void Server::reciveCom()
+void Server::reciveCom(int fd)
 {
+	char buffer[1024];
 	
+	recv(fd, buffer, sizeof(buffer))
 }
 
 void  Server::pollLoop()
@@ -115,15 +121,19 @@ void  Server::pollLoop()
 	while (runing)
 	{
 		if(poll(pollfds.data(), pollfds.size(), -1) == -1)
+		{
+			// if (errno)
 			throw std::runtime_error("Poll failed!");
-		for (size_t i = 0; i < pollfds.size(); i++)
+		}
+		size_t count = pollfds.size();
+		for (size_t i = 0; i < count; i++)
 		{
 			if (pollfds[i].revents & POLLIN)
 			{
 				if (pollfds[i].fd == serverFd)
 					acceptClient();
 				else
-					reciveCom();
+					reciveCom(pollfds[i].fd);
 			}
 		}
 

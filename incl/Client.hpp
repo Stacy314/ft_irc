@@ -16,7 +16,7 @@ class Client
 {
 	private:
 	int fd;
-	std::string IPad;
+	std::string buffer;
 	public:
 		Client();
 		Client(int fd);
