@@ -50,7 +50,7 @@ class Channel
 
 		std::map<Client*, MemberInfo>::iterator			findMember(Client*);
 		std::map<Client*, MemberInfo>::const_iterator	findMember(Client*) const;
-		bool											acceptsKey(const std::string&) const;
+		bool											correctKey(const std::string&) const;
 		bool											isInvited(Client*) const;
         void                                            ensureOperator();
 		ChannelResult									accessCheck(Client*);
@@ -64,7 +64,7 @@ class Channel
         bool            	isOperator(Client*) const;
 		bool				hasKey() const;
 		bool				isFull() const;
-		const std::string&	getTopic(std::string&) const;
+		const std::string&	getTopic() const;
         ChannelResult		setOperator(Client*, Client*, bool);
 		ChannelResult		setTopic(const std::string&, Client*);
         ChannelResult   	addMember(Client*, const std::string&);
