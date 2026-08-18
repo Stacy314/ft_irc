@@ -42,9 +42,14 @@ bool	Channel::isOperator(Client* memb) const
 	return (it != members.end() && it->second.isOp);
 }
 
-bool	Channel::acceptsKey(const std::string& key) const
+bool	Channel::correctKey(const std::string& key) const
 {
-	return (this->key.empty() || this->key == key);
+	return (this->key == key);
+}
+
+bool	Channel::hasKey() const
+{
+	return (!key.empty());
 }
 
 bool	Channel::isInvited(Client* memb) const
@@ -74,6 +79,16 @@ ChannelResult	Channel::accessCheck(Client* actor, Client* target)
 		return NOT_IN_CHANNEL;
 
 	return SUCCESS;
+}
+
+bool	Channel::isFull() const
+{
+	return (userLimit > 0 && size() >= userLimit);
+}
+
+const std::string&	Channel::getTopic() const
+{
+	return topic;
 }
 
 ChannelResult	Channel::setOperator(Client* actor,
@@ -194,11 +209,11 @@ ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 		info.isOp = false;
 	
 	//verifying if the key is valid
-	if (!this->key.empty() && !acceptsKey(key))
+	if (hasKey() && !correctKey(key))
 		return BAD_KEY;
 
 	//checking if the channel is full
-	if (userLimit > 0 && size() >= userLimit)
+	if (isFull())
 		return CHANNEL_FULL;
 	
 	//checking if the channel is invite only and if the new member is invited
