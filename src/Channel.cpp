@@ -14,8 +14,7 @@ Channel::Channel(const Channel &other)
       userLimit(other.userLimit),
       inviteOnly(other.inviteOnly),
       protectedTopic(other.protectedTopic),
-      counter(other.counter),
-      returnCode(other.returnCode)
+      counter(other.counter)
 {}
 
 Channel &Channel::operator=(const Channel &other)
@@ -31,7 +30,6 @@ Channel &Channel::operator=(const Channel &other)
         inviteOnly = other.inviteOnly;
         protectedTopic = other.protectedTopic;
         counter = other.counter;
-        returnCode = other.returnCode;
     }
 
     return *this;
@@ -74,9 +72,14 @@ bool	Channel::isOperator(Client* memb) const
 	return (it != members.end() && it->second.isOp);
 }
 
-bool	Channel::acceptsKey(const std::string& key) const
+bool	Channel::correctKey(const std::string& key) const
 {
-	return (this->key.empty() || this->key == key);
+	return (this->key == key);
+}
+
+bool	Channel::hasKey() const
+{
+	return (!key.empty());
 }
 
 bool	Channel::isInvited(Client* memb) const
@@ -86,32 +89,41 @@ bool	Channel::isInvited(Client* memb) const
 	return (it != invite.end());
 }
 
-ChannelResult	Channel::accessCheck(Client* actor)
+ChannelResult	Channel::requireAccess(Client* actor, bool needOp) const
 {
 	if (!isMember(actor))
 		return NOT_ON_CHANNEL;
-	if (!isOperator(actor))
-		return NOT_OPERATOR;
-
+	if (needOp)
+		if (!isOperator(actor))
+			return NOT_OPERATOR;
 	return SUCCESS;
 }
 
-ChannelResult	Channel::accessCheck(Client* actor, Client* target)
+ChannelResult	Channel::requireTarget(Client* target) const
 {
-	returnCode = accessCheck(actor);
-	if (returnCode != SUCCESS)
-		return returnCode;
-
 	if (!isMember(target))
 		return NOT_IN_CHANNEL;
 
 	return SUCCESS;
 }
 
+bool	Channel::isFull() const
+{
+	return (userLimit > 0 && size() >= userLimit);
+}
+
+const std::string&	Channel::getTopic() const
+{
+	return topic;
+}
+
 ChannelResult	Channel::setOperator(Client* actor,
 	Client* target, bool status)
 {
-	returnCode = accessCheck(actor, target);
+	ChannelResult returnCode = requireAccess(actor, true);
+	if (returnCode != SUCCESS)
+		return returnCode;
+	returnCode = requireTarget(target);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
@@ -127,9 +139,12 @@ ChannelResult	Channel::setOperator(Client* actor,
 	return NO_CHANGE;
 }
 
-ChannelResult   Channel::removeMember(Client* memb)
+ChannelResult   Channel::removeMember(Client* target)
 {
-	members.erase(memb);
+	ChannelResult returnCode = requireTarget(target);
+	if (returnCode != SUCCESS)
+		return returnCode;
+	members.erase(target);
 
 	if (isEmpty())
 		return CHANNEL_EMPTY;
@@ -141,81 +156,84 @@ ChannelResult   Channel::removeMember(Client* memb)
 
 ChannelResult   Channel::kickMember(Client* actor, Client* victim)
 {
-	returnCode = accessCheck(actor, victim);
+	ChannelResult returnCode = requireAccess(actor, true);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
 	return (removeMember(victim));
 }
 
-ChannelResult   Channel::inviteMember(Client* actor, Client* invited)
+ChannelResult   Channel::inviteMember(Client* actor, Client* target)
 {
-	returnCode = accessCheck(actor);
+	ChannelResult returnCode = requireAccess(actor, inviteOnly);
 	if (returnCode != SUCCESS)
 		return returnCode;
+	if (isMember(target))
+		return ALREADY_MEMBER;
 
-	invite.insert(invited->getNickname());
+	invite.insert(target->getNickname());
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setInviteOnly(bool status, Client* actor)
+ChannelResult   Channel::setInviteOnly(Client* actor, bool status)
 {
-	returnCode = accessCheck(actor);
+	ChannelResult returnCode = requireAccess(actor, true);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
+	if (inviteOnly == status)
+		return NO_CHANGE;
 	inviteOnly = status;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setProtectedTopic(bool status, Client* actor)
+ChannelResult   Channel::setProtectedTopic(Client* actor, bool status)
 {
-	returnCode = accessCheck(actor);
+	ChannelResult returnCode = requireAccess(actor, true);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
+	if (status == protectedTopic)
+		return NO_CHANGE;
 	protectedTopic = status;
 	return SUCCESS;
 }
 
-ChannelResult	Channel::setTopic(const std::string& newTopic, Client* actor)
+ChannelResult	Channel::setTopic(Client* actor, const std::string& newTopic)
 {
-	if (protectedTopic)
-	{
-		returnCode = accessCheck(actor);
-		if (returnCode != SUCCESS)
-			return returnCode;
-	}
-	else if (!isMember(actor))
-		return NOT_ON_CHANNEL;
+	ChannelResult returnCode = requireAccess(actor, protectedTopic);
+	if (returnCode != SUCCESS)
+		return returnCode;
 	
 	topic = newTopic;
-	if (topic.empty())
-		return NO_TOPIC;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setUserLimit(size_t limit, Client* actor)
+ChannelResult   Channel::setUserLimit(Client* actor, size_t limit)
 {
-	returnCode = accessCheck(actor);
+	ChannelResult returnCode = requireAccess(actor, true);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
+	if (userLimit == limit)
+		return NO_CHANGE;
 	userLimit = limit;
 	return SUCCESS;
 }
 
-ChannelResult   Channel::setKey(const std::string& key, Client* actor)
+ChannelResult   Channel::setKey(Client* actor, const std::string& key)
 {
-	returnCode = accessCheck(actor);
+	ChannelResult returnCode = requireAccess(actor, true);
 	if (returnCode != SUCCESS)
 		return returnCode;
 
+	if (this->key == key)
+		return NO_CHANGE;
 	this->key = key;
 	return SUCCESS;
 }
 
-ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
+ChannelResult	Channel::addMember(Client* target, const std::string& key)
 {
 	//initializing operator status && counter
 	MemberInfo info;
@@ -224,29 +242,47 @@ ChannelResult	Channel::addMember(Client* newMemb, const std::string& key)
 		info.isOp = true;	
 	else
 		info.isOp = false;
-	
+
+	//verifying that its a new member
+	if (isMember(target))
+		return ALREADY_MEMBER;
+
 	//verifying if the key is valid
-	if (!this->key.empty() && !acceptsKey(key))
+	if (hasKey() && !correctKey(key))
 		return BAD_KEY;
 
 	//checking if the channel is full
-	if (userLimit > 0 && size() >= userLimit)
+	if (isFull())
 		return CHANNEL_FULL;
 	
 	//checking if the channel is invite only and if the new member is invited
-	if (inviteOnly && !isInvited(newMemb))
+	if (inviteOnly && !isInvited(target))
 		return INVITE_ONLY;
 
 	//trying to add a new member
-	std::pair<std::map<Client*, MemberInfo>::iterator, bool> res
-		= members.insert(std::make_pair(newMemb, info));
-	if (!res.second)
-		return ALREADY_MEMBER;
+	members.insert(std::make_pair(target, info));
 	
 	//erasing from invite list if existed
-	invite.erase(newMemb->getNickname());
+	invite.erase(target->getNickname());
 
 	//increment Id
 	counter++;
 	return SUCCESS;
 }
+
+const std::string&	Channel::getName() const { return name; }
+
+std::vector<Client*>	Channel::getMembers() const
+{
+	std::vector<Client*> list;
+	list.reserve(members.size());
+	std::map<Client*, MemberInfo>::const_iterator it = members.begin();
+	while (it != members.end())
+	{
+		list.push_back(it->first);
+		++it;
+	}
+	return list;
+}
+
+bool	Channel::hasTopic() const { return (!topic.empty()); }
