@@ -46,7 +46,7 @@ class Server
 		Server &operator=(const Server &other);
 
 	public:
-		Server(const Server &other);
+		Server(size_t port, const std::string &password);
 		~Server();
 
 		int getPort();

@@ -14,8 +14,7 @@
 
 // }
 
-Server::Server(size_t port, const std::string &password)
-{
+Server::Server::Server(size_t port, const std::string &password){
 	this->port = port;
 	this->password = password;
 	this->serverFd = -1;
