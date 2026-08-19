@@ -1,4 +1,8 @@
 #include "../incl/Server.hpp"
+#include "../incl/Parser.hpp"
+#include "../incl/CommandHandler.hpp"
+#include <cerrno>
+
 
 // Server::Server()
 // {
@@ -6,6 +10,7 @@
 // 	this->password = "0";
 // 	this->serverFd = -1;
 // 	this->runing = false;
+// 	this->_serverName = "ircserv";
 
 // }
 
@@ -15,6 +20,7 @@ Server::Server(size_t port, const std::string &password)
 	this->password = password;
 	this->serverFd = -1;
 	this->runing = false;
+	this->_serverName = "ircserv";
 
 }
 
@@ -103,7 +109,7 @@ void	Server::acceptClient()
 		throw std::runtime_error("Failed to accept client!");
 	if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1)
 		throw std::runtime_error("Failed to create nonblocksocket");
-	Client client(newfd, NULL);
+	Client client(newfd, "");
 	clients.insert(std::make_pair(newfd, client));
 	addPollfd(newfd);
 }
@@ -111,15 +117,51 @@ void	Server::acceptClient()
 void Server::reciveCom(int fd)
 {
 	char buffer[1024];
-	
-	recv(fd, buffer, sizeof(buffer), 0);
+	std::map<int, Client>::iterator it = clients.find(fd);
+	if (it == clients.end())
+		return;
+
+	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
+	if (bytes > 0)
+	{
+		Client &client = it->second;
+		client.inbuf.append(buffer, bytes);
+
+		std::string::size_type end;
+		while ((end = client.inbuf.find("\r\n")) != std::string::npos)
+		{
+			std::string line = client.inbuf.substr(0, end);
+			client.inbuf.erase(0, end + 2);
+			if (!line.empty())
+			{
+				CommandHandler handler(*this);
+				handler.execute(client, Parser::parse(line));
+			}
+		}
+		return;
+	}
+
+	// if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+	// 	return;
+
+	close(fd);
+	clients.erase(it);
+	for (std::vector<pollfd>::iterator pfd = pollfds.begin();
+		pfd != pollfds.end(); ++pfd)
+	{
+		if (pfd->fd == fd)
+		{
+			pfd->fd = -1;
+			break;
+		}
+	}
 }
 
 void  Server::pollLoop()
 {
 	while (runing)
 	{
-		if(poll(pollfds.data(), pollfds.size(), -1) == -1)
+		if(poll(&pollfds[0], pollfds.size(), -1) == -1)
 		{
 			// if (errno)
 			throw std::runtime_error("Poll failed!");
@@ -150,7 +192,6 @@ void Server::start()
 	runing = true;
 	pollLoop();
 }
-
 
 const std::string &Server::getPassword() const {
     return password;
@@ -185,7 +226,7 @@ Channel &Server::createChannel(const std::string &name) {
 Client *Server::findNick(const std::string &nickname) {
     std::map<int, Client>::iterator it;
 
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
+	for (it = clients.begin(); it != clients.end(); ++it) {
         if (toUpper(it->second.getNickname())
             == toUpper(nickname)) {
             return &it->second;

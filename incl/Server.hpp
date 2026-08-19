@@ -30,7 +30,6 @@
 # define KCYN  "\x1B[36m"
 # define KWHT  "\x1B[37m"
 
-
 class Server
 {
 	private:
@@ -41,14 +40,13 @@ class Server
 		std::vector<pollfd> pollfds;
 		std::map<int, Client> clients;
 		std::string           _serverName;
-		std::map<int, Client> _clients;
 		std::map<std::string, Channel> _channels;
 		Server();
 		Server(const Server &other);
 		Server &operator=(const Server &other);
-		
+
 	public:
-		Server(size_t  port, const std::string &password);
+		Server(const Server &other);
 		~Server();
 
 		int getPort();
@@ -70,6 +68,4 @@ class Server
 		Client *findNick(const std::string &nickname);
 		void queue(Client &client, const std::string &message);
 };
-
-
 

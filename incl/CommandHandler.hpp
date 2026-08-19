@@ -9,12 +9,13 @@ class Server;
 class CommandHandler
 {
 private:
+	CommandHandler(const CommandHandler &other);
+	CommandHandler &operator=(const CommandHandler &other);
+	
     Server &_server;
     void sendReply(Client &client, const std::string &message);
     void tryRegister(Client &client);
     bool isValidNickname(const std::string &nickname) const;
-	CommandHandler(const CommandHandler &other);
-	CommandHandler &operator=(const CommandHandler &other);
 	void handlePass(Client &client, const Command &command);
 	void handleNick(Client &client, const Command &command);
 	void handleUser(Client &client, const Command &command);
@@ -27,6 +28,5 @@ public:
     ~CommandHandler();
 	
 	void execute(Client &client, const Command &command);
-	// std::map<std::string, CommandType> commands;
 };
 
