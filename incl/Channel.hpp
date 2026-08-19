@@ -1,11 +1,7 @@
 #pragma once
 
-#include <string>
-#include <set>
-#include <map>
-#include <vector>
+#include "Utils.hpp"
 #include "Client.hpp"
-#include <cstddef>
 
 enum ChannelResult
 {
@@ -66,6 +62,7 @@ class Channel
         bool                  hasTopic() const;
 		const std::string&	  getTopic() const;
         const std::string&    getName() const;
+        std::string           getMode(Client*) const; //MODE no arguments
         std::vector<Client*>  getMembers() const;
         ChannelResult		  setOperator(Client*, Client*, bool);
 		ChannelResult   	  setInviteOnly(Client*, bool); //MODE +i/-i
