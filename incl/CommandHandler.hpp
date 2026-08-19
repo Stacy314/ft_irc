@@ -1,8 +1,8 @@
 #pragma once 
 
-#include "../incl/Command.hpp"
-#include "../incl/Client.hpp"
-#include "../incl/Channel.hpp"
+#include "Command.hpp"
+#include "Client.hpp"
+#include "Channel.hpp"
 
 class Server;
 
@@ -27,6 +27,6 @@ public:
     ~CommandHandler();
 	
 	void execute(Client &client, const Command &command);
-	std::map<std::string, CommandType> commands;
+	// std::map<std::string, CommandType> commands;
 };
 

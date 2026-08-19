@@ -1,25 +1,26 @@
 #pragma once
+
 #include <sys/socket.h>
 #include <csignal>
 #include <cstring>
-#include <iostream>
 #include <netinet/in.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <cstdlib>
 #include <stdlib.h>
 #include <poll.h>
 #include <vector>
-#include "../incl/Client.hpp"
 #include <map>
-#include <Utils.hpp>
 #include <utility>
-
-#include "../incl/Client.hpp"
-#include "../incl/Channel.hpp"
-#include <map>
 #include <string>
 #include <sstream>
+#include <iostream>
+#include <fcntl.h>
+
+#include "Utils.hpp"
+#include "Client.hpp"
+#include "Channel.hpp"
+
+
 # define KNRM  "\x1B[0m"
 # define KRED  "\x1B[31m"
 # define KGRN  "\x1B[32m"
@@ -28,9 +29,8 @@
 # define KMAG  "\x1B[35m"
 # define KCYN  "\x1B[36m"
 # define KWHT  "\x1B[37m"
-#include <iostream>
-#include <fcntl.h>
-#include <sstream>
+
+
 class Server
 {
 	private:
@@ -40,16 +40,15 @@ class Server
 		bool runing;
 		std::vector<pollfd> pollfds;
 		std::map<int, Client> clients;
-    std::string           _serverName;
-    std::map<int, Client> _clients;
-	std::map<std::string, Channel> _channels;
-	Server(const Server &other);
-	Server &operator=(const Server &other);
-	public:
+		std::string           _serverName;
+		std::map<int, Client> _clients;
+		std::map<std::string, Channel> _channels;
 		Server();
+		Server(const Server &other);
+		Server &operator=(const Server &other);
+		
+	public:
 		Server(size_t  port, const std::string &password);
-		Server(const Server& obj);
-		Server& operator=(const Server&  obj);
 		~Server();
 
 		int getPort();
@@ -64,16 +63,12 @@ class Server
 		void addPollfd(int fd);
 		void	acceptClient();
 		void	reciveCom(int fd);
-		    Server(int port, const std::string &password);
-    ~Server();
-	Channel *findChannel(const std::string &name);
-	Channel &createChannel(const std::string &name);
-    const std::string &getPassword() const;
-    const std::string &serverName() const;
-    Client *findNick(const std::string &nickname);
-    void queue(Client &client, const std::string &message);
-
-
+		Channel *findChannel(const std::string &name);
+		Channel &createChannel(const std::string &name);
+		const std::string &getPassword() const;
+		const std::string &serverName() const;
+		Client *findNick(const std::string &nickname);
+		void queue(Client &client, const std::string &message);
 };
 
 

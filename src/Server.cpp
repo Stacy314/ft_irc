@@ -1,14 +1,13 @@
 #include "../incl/Server.hpp"
 
+// Server::Server()
+// {
+// 	this->port = 0;
+// 	this->password = "0";
+// 	this->serverFd = -1;
+// 	this->runing = false;
 
-Server::Server()
-{
-	this->port = 0;
-	this->password = "0";
-	this->serverFd = -1;
-	this->runing = false;
-
-}
+// }
 
 Server::Server(size_t port, const std::string &password)
 {
@@ -19,19 +18,19 @@ Server::Server(size_t port, const std::string &password)
 
 }
 
-Server::Server(const Server& obj)
-{	
-	*this = obj;
-}
+// Server::Server(const Server& obj)
+// {	
+// 	*this = obj;
+// }
 
-Server& Server::operator=(const Server&  obj)
-{
-	if (this == &obj)
-		return *this;
-	this->port = obj.port;
-	this->password = obj.password;
-	return *this;
-}
+// Server& Server::operator=(const Server&  obj)
+// {
+// 	if (this == &obj)
+// 		return *this;
+// 	this->port = obj.port;
+// 	this->password = obj.password;
+// 	return *this;
+// }
 
 Server::~Server(){}
 
@@ -152,13 +151,6 @@ void Server::start()
 	pollLoop();
 }
 
-// #include "../incl/Utils.hpp"
-
-// Server::Server(int port, const std::string &password) : _password(password), _serverName("ircserv.local") {
-//     (void)port;
-// }
-
-Server::~Server() {}
 
 const std::string &Server::getPassword() const {
     return password;
