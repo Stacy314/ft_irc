@@ -25,6 +25,7 @@ public:
     ~Client();
 
   	std::string outbuf;
+  	std::string inbuf;
     bool isPasswordAccepted() const;
     void setPasswordAccepted(bool value);
     bool isRegistered() const;

@@ -104,7 +104,7 @@ void	Server::acceptClient()
 		throw std::runtime_error("Failed to accept client!");
 	if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1)
 		throw std::runtime_error("Failed to create nonblocksocket");
-	Client client(newfd);
+	Client client(newfd, NULL);
 	clients.insert(std::make_pair(newfd, client));
 	addPollfd(newfd);
 }
@@ -113,7 +113,7 @@ void Server::reciveCom(int fd)
 {
 	char buffer[1024];
 	
-	recv(fd, buffer, sizeof(buffer))
+	recv(fd, buffer, sizeof(buffer), 0);
 }
 
 void  Server::pollLoop()
@@ -150,17 +150,18 @@ void Server::start()
 	addPollfd(serverFd);
 	runing = true;
 	pollLoop();
-	
-#include "../incl/Utils.hpp"
-
-Server::Server(int port, const std::string &password) : _password(password), _serverName("ircserv.local") {
-    (void)port;
 }
+
+// #include "../incl/Utils.hpp"
+
+// Server::Server(int port, const std::string &password) : _password(password), _serverName("ircserv.local") {
+//     (void)port;
+// }
 
 Server::~Server() {}
 
 const std::string &Server::getPassword() const {
-    return _password;
+    return password;
 }
 
 

@@ -12,6 +12,7 @@
 #include <vector>
 #include "../incl/Client.hpp"
 #include <map>
+#include <Utils.hpp>
 #include <utility>
 
 #include "../incl/Client.hpp"
@@ -19,7 +20,14 @@
 #include <map>
 #include <string>
 #include <sstream>
-
+# define KNRM  "\x1B[0m"
+# define KRED  "\x1B[31m"
+# define KGRN  "\x1B[32m"
+# define KYEL  "\x1B[33m"
+# define KBLU  "\x1B[34m"
+# define KMAG  "\x1B[35m"
+# define KCYN  "\x1B[36m"
+# define KWHT  "\x1B[37m"
 #include <iostream>
 #include <fcntl.h>
 #include <sstream>
@@ -32,6 +40,11 @@ class Server
 		bool runing;
 		std::vector<pollfd> pollfds;
 		std::map<int, Client> clients;
+    std::string           _serverName;
+    std::map<int, Client> _clients;
+	std::map<std::string, Channel> _channels;
+	Server(const Server &other);
+	Server &operator=(const Server &other);
 	public:
 		Server();
 		Server(size_t  port, const std::string &password);
@@ -51,19 +64,7 @@ class Server
 		void addPollfd(int fd);
 		void	acceptClient();
 		void	reciveCom(int fd);
-
-
-};
-private:
-    std::string           _password;
-    std::string           _serverName;
-    std::map<int, Client> _clients;
-	std::map<std::string, Channel> _channels;
-	Server(const Server &other);
-	Server &operator=(const Server &other);
-
-public:
-    Server(int port, const std::string &password);
+		    Server(int port, const std::string &password);
     ~Server();
 	Channel *findChannel(const std::string &name);
 	Channel &createChannel(const std::string &name);
@@ -71,4 +72,9 @@ public:
     const std::string &serverName() const;
     Client *findNick(const std::string &nickname);
     void queue(Client &client, const std::string &message);
+
+
 };
+
+
+
