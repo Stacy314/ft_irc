@@ -609,7 +609,7 @@ static void testJoinBadKey()
     );
 
     result =
-        channel.setKey("correct", &owner);
+        channel.setKey(&owner, "correct");
 
     printTest(
         "Operator sets channel key",
