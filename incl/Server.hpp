@@ -14,14 +14,11 @@
 #include <map>
 #include <utility>
 
-# define KNRM  "\x1B[0m"
-# define KRED  "\x1B[31m"
-# define KGRN  "\x1B[32m"
-# define KYEL  "\x1B[33m"
-# define KBLU  "\x1B[34m"
-# define KMAG  "\x1B[35m"
-# define KCYN  "\x1B[36m"
-# define KWHT  "\x1B[37m"
+#include "../incl/Client.hpp"
+#include "../incl/Channel.hpp"
+#include <map>
+#include <string>
+#include <sstream>
 
 #include <iostream>
 #include <fcntl.h>
@@ -56,4 +53,22 @@ class Server
 		void	reciveCom(int fd);
 
 
+};
+private:
+    std::string           _password;
+    std::string           _serverName;
+    std::map<int, Client> _clients;
+	std::map<std::string, Channel> _channels;
+	Server(const Server &other);
+	Server &operator=(const Server &other);
+
+public:
+    Server(int port, const std::string &password);
+    ~Server();
+	Channel *findChannel(const std::string &name);
+	Channel &createChannel(const std::string &name);
+    const std::string &getPassword() const;
+    const std::string &serverName() const;
+    Client *findNick(const std::string &nickname);
+    void queue(Client &client, const std::string &message);
 };
