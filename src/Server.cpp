@@ -185,7 +185,7 @@ Channel &Server::createChannel(const std::string &name) {
 Client *Server::findNick(const std::string &nickname) {
     std::map<int, Client>::iterator it;
 
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
+    for (it = clients.begin(); it != clients.end(); ++it) {
         if (toUpper(it->second.getNickname())
             == toUpper(nickname)) {
             return &it->second;

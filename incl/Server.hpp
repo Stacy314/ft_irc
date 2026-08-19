@@ -41,7 +41,6 @@ class Server
 		std::vector<pollfd> pollfds;
 		std::map<int, Client> clients;
 		std::string           _serverName;
-		std::map<int, Client> _clients;
 		std::map<std::string, Channel> _channels;
 		Server();
 		Server(const Server &other);
