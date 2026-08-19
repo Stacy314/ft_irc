@@ -24,10 +24,12 @@ Client::Client(const Client &other)
       host(other.host),
       nick(other.nick),
       user(other.user),
+	  fullname(other.fullname),
       pass(other.pass),
       registered(other.registered),
       quit(other.quit),
-      outbuf(other.outbuf)
+	  outbuf(other.outbuf),
+	  inbuf(other.inbuf)
 {}
 
 Client &Client::operator=(const Client &other) {
@@ -37,10 +39,12 @@ Client &Client::operator=(const Client &other) {
         host = other.host;
         nick = other.nick;
         user = other.user;
+		fullname = other.fullname;
         pass = other.pass;
         registered = other.registered;
         quit = other.quit;
         outbuf = other.outbuf;
+		inbuf = other.inbuf;
     }
     return *this;
 }

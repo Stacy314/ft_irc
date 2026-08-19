@@ -27,6 +27,5 @@ public:
     ~CommandHandler();
 	
 	void execute(Client &client, const Command &command);
-	std::map<std::string, CommandType> commands;
 };
 

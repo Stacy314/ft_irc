@@ -12,7 +12,7 @@
 #include <vector>
 #include "../incl/Client.hpp"
 #include <map>
-#include <Utils.hpp>
+#include "Utils.hpp"
 #include <utility>
 
 #include "../incl/Client.hpp"
@@ -39,17 +39,14 @@ class Server
 		int serverFd;
 		bool runing;
 		std::vector<pollfd> pollfds;
-		std::map<int, Client> clients;
+	std::map<int, Client> clients;
     std::string           _serverName;
-    std::map<int, Client> _clients;
 	std::map<std::string, Channel> _channels;
 	Server(const Server &other);
 	Server &operator=(const Server &other);
 	public:
 		Server();
 		Server(size_t  port, const std::string &password);
-		Server(const Server& obj);
-		Server& operator=(const Server&  obj);
 		~Server();
 
 		int getPort();
@@ -64,8 +61,6 @@ class Server
 		void addPollfd(int fd);
 		void	acceptClient();
 		void	reciveCom(int fd);
-		    Server(int port, const std::string &password);
-    ~Server();
 	Channel *findChannel(const std::string &name);
 	Channel &createChannel(const std::string &name);
     const std::string &getPassword() const;
@@ -75,6 +70,4 @@ class Server
 
 
 };
-
-
 
