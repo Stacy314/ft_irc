@@ -286,3 +286,24 @@ std::vector<Client*>	Channel::getMembers() const
 }
 
 bool	Channel::hasTopic() const { return (!topic.empty()); }
+
+std::string	Channel::getMode(Client* actor) const
+{
+	std::string res = "+";
+
+	if (inviteOnly)
+		res.append("i");
+	if (protectedTopic)
+		res.append("t");
+	if (hasKey() && isMember(actor))
+		res.append("k");
+	if (userLimit > 0)
+		res.append("l");
+
+	if (hasKey() && isMember(actor))
+		res.append(" " + key);
+
+	if (userLimit > 0)
+		res.append(" " + numToString(userLimit));
+	return res;
+}
