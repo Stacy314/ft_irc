@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <vector>
 #include <map>
+#include "Utils.hpp"
 #include <utility>
 #include <string>
 #include <sstream>
@@ -39,13 +40,11 @@ class Server
 		int serverFd;
 		bool runing;
 		std::vector<pollfd> pollfds;
-		std::map<int, Client> clients;
-		std::string           _serverName;
-		std::map<std::string, Channel> _channels;
-		Server();
-		Server(const Server &other);
-		Server &operator=(const Server &other);
-		
+	std::map<int, Client> clients;
+    std::string           _serverName;
+	std::map<std::string, Channel> _channels;
+	Server(const Server &other);
+	Server &operator=(const Server &other);
 	public:
 		Server(size_t  port, const std::string &password);
 		~Server();
@@ -69,6 +68,4 @@ class Server
 		Client *findNick(const std::string &nickname);
 		void queue(Client &client, const std::string &message);
 };
-
-
 
