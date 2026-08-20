@@ -1,6 +1,5 @@
 #include "../incl/CommandHandler.hpp"
 #include "../incl/Server.hpp"
-#include "../incl/Channel.hpp"
 #include "../incl/Utils.hpp"
 
 
@@ -25,6 +24,8 @@ void CommandHandler::execute(Client &client, const Command &command) {
         handleJoin(client, command);
     else if (cmd == "PRIVMSG")
         handlePrivmsg(client, command);
+    else if (cmd == "TOPIC")
+        handleTopic(client, command);
     else
     {
         sendReply(
