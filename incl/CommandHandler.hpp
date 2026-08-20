@@ -15,12 +15,18 @@ private:
     bool isValidNickname(const std::string &nickname) const;
 	CommandHandler(const CommandHandler &other);
 	CommandHandler &operator=(const CommandHandler &other);
+	std::string	buildPrefix(const Client &) const;
+	void channelMessaging(Channel*, const std::string &, Client* receiver = NULL);
 	void handlePass(Client &client, const Command &command);
 	void handleNick(Client &client, const Command &command);
 	void handleUser(Client &client, const Command &command);
 	void handleJoin(Client &client, const Command &command);
 	void handlePrivmsg(Client &client, const Command &command);
+	void handleTopic(Client&, const Command&);
 	void handleChannelResult(Client &client, ChannelResult result, const std::string &channelName, const std::string &target);
+
+	void sendNumeric(Client &client, const std::string &code,
+                 const std::string &params, const std::string &text);
 	
 public:
     CommandHandler(Server &server);
