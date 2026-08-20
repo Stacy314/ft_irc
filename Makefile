@@ -1,7 +1,11 @@
 NAME     = ircserv
 CXX		 = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -MMD -MP
-SRC		 = src/main.cpp src/Server.cpp src/Client.cpp src/Channel.cpp src/Utils.cpp src/Parser.cpp src/Command.cpp src/CommandHandler.cpp src/CommandTests.cpp src/ChannelTests.cpp
+SRC		 = src/main.cpp src/Server.cpp src/Client.cpp \
+		   src/Channel.cpp src/Utils.cpp src/Parser.cpp \
+		   src/Command.cpp src/CommandHandler.cpp \
+		   src/CommandTests.cpp src/ChannelTests.cpp \
+		   src/ChannelCommands.cpp
 OBJ_DIR  = obj
 OBJ      = $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 DEP      = $(OBJ:.o=.d)
