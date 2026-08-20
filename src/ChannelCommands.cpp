@@ -5,8 +5,7 @@
 void CommandHandler::sendNumeric(Client &client, const std::string &code,
                  const std::string &params, const std::string &text)
 {
-	std::string ircserv = "ircserv";
-    std::string line = ":" + /*_server.serverName()*/ircserv + " " + code + " ";
+    std::string line = ":" + _server.serverName() + " " + code + " ";
 
     line += client.getNickname().empty() ? "*" : client.getNickname();
 
