@@ -45,6 +45,7 @@ class Server
 	std::map<std::string, Channel> _channels;
 	Server(const Server &other);
 	Server &operator=(const Server &other);
+	Server();
 	public:
 		Server(size_t  port, const std::string &password);
 		~Server();

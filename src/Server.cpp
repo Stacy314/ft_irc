@@ -12,7 +12,7 @@ Server::Server()
 	this->runing = false;
 	this->_serverName = "ircserv";
 
-// }
+}
 
 Server::Server(size_t port, const std::string &password)
 {
