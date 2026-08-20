@@ -48,7 +48,7 @@ class Server
 	public:
 		Server(size_t  port, const std::string &password);
 		~Server();
-
+		Server();
 		int getPort();
 		std::string getPassword();
 		void setPort(size_t  port);
