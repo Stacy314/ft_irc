@@ -35,6 +35,8 @@ public:
     const std::string &getUsername() const;
     void setUsername(const std::string &username);
     const std::string &getRealname() const;
+    void setHostname(const std::string &hostname);
+    const std::string &getHostname() const;
     void setRealname(const std::string &name);
 	bool isUserReceived() const;
 	void setUserReceived(bool value);
