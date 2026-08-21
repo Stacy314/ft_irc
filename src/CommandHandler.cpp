@@ -26,6 +26,10 @@ void CommandHandler::execute(Client &client, const Command &command) {
         handlePrivmsg(client, command);
     else if (cmd == "TOPIC")
         handleTopic(client, command);
+    else if (cmd == "INVITE")
+        handleInvite(client, command);
+    else if (cmd == "KICK")
+        handleKick(client, command);
     else
     {
         sendReply(
