@@ -141,6 +141,9 @@ ChannelResult	Channel::setOperator(Client* actor,
 
 ChannelResult   Channel::removeMember(Client* target)
 {
+	/* A disconnected client can be only invited, not a member. */
+	invite.erase(target->getNickname());
+
 	ChannelResult returnCode = requireTarget(target);
 	if (returnCode != SUCCESS)
 		return returnCode;
