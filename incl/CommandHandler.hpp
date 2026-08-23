@@ -21,7 +21,20 @@ private:
 	void handleUser(Client &client, const Command &command);
 	void handleJoin(Client &client, const Command &command);
 	void handlePrivmsg(Client &client, const Command &command);
-	void handleChannelResult(Client &client, ChannelResult result, const std::string &channelName, const std::string &target);
+	void handleChannelResult(Client &client, ChannelResult result,
+		const std::string &channelName, const std::string &target);
+
+	void channelMessaging(Channel*, const std::string &,
+		Client* receiver = NULL);
+	void channelMessaging(std::vector<Client*>,
+		const std::string &, Client* receiver = NULL);
+	void handleTopic(Client&, const Command&);
+	void handleInvite(Client&, const Command&);
+	void handleKick(Client&, const Command&);
+	void handleMode(Client&, const Command&);
+
+	void sendNumeric(Client &client, const std::string &code,
+                 const std::string &params, const std::string &text);
 	
 public:
     CommandHandler(Server &server);
