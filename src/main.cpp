@@ -29,9 +29,11 @@ size_t parse_port(const std::string& str)
 
 int main (int argc, char **argv)
 {
-   runChannelTests();
-   if (argc != 3)
-      return (1); //errror mess?
+   // runChannelTests();
+   if (argc != 3){
+      std::cerr << "Usage: " << argv[0] << " <port> <password>\n";
+      return (1);
+   }
    
    try
    {
