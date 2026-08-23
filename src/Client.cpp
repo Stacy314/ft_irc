@@ -90,6 +90,8 @@ void Client::setRealname(const std::string &name) {
 int Client::getFd() const
 {
     return fd;
+}
+
 void Client::setHostname(const std::string &hostname) {
     host = hostname;
 }

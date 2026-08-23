@@ -41,5 +41,6 @@ public:
     ~CommandHandler();
 	
 	void execute(Client &client, const Command &command);
+	std::string buildPrefix(const Client &client) const;
 };
 
