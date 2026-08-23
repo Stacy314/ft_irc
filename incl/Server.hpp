@@ -20,7 +20,8 @@
 #include "Utils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
-
+#include "CommandHandler.hpp"
+#include "Parser.hpp"
 
 # define KNRM  "\x1B[0m"
 # define KRED  "\x1B[31m"
@@ -34,38 +35,57 @@
 
 class Server
 {
-	private:
-		size_t port;
-		std::string password;
-		int serverFd;
-		bool runing;
-		std::vector<pollfd> pollfds;
-	std::map<int, Client> clients;
-    std::string           _serverName;
-	std::map<std::string, Channel> _channels;
-	Server(const Server &other);
-	Server &operator=(const Server &other);
-	public:
-		Server(size_t  port, const std::string &password);
-		~Server();
-		Server();
-		int getPort();
-		std::string getPassword();
-		void setPort(size_t  port);
-		void setPassword(std::string password);
-		void start();
-		void createSocket();
-		void bindSocket();
-		void listenSocket();
-		void pollLoop();
-		void addPollfd(int fd);
-		void	acceptClient();
-		void	reciveCom(int fd);
-		Channel *findChannel(const std::string &name);
-		Channel &createChannel(const std::string &name);
-		const std::string &getPassword() const;
-		const std::string &serverName() const;
-		Client *findNick(const std::string &nickname);
-		void queue(Client &client, const std::string &message);
+private:
+    size_t port;
+    std::string password;
+    int serverFd;
+    bool runing;
+    std::vector<pollfd> pollfds;
+    std::map<int, Client> clients;
+    std::string _serverName;
+    std::map<std::string, Channel> _channels;
+
+    CommandHandler _handler;
+
+    Server(const Server &other);
+    Server &operator=(const Server &other);
+
+public:
+    Server(size_t port, const std::string &password);
+    Server();
+    ~Server();
+
+    int getPort();
+    std::string getPassword();
+
+    void setPort(size_t port);
+    void setPassword(std::string password);
+
+    void start();
+
+    void createSocket();
+    void bindSocket();
+    void listenSocket();
+    void pollLoop();
+
+    void addPollfd(int fd);
+    void acceptClient();
+    void reciveCom(int fd);
+
+    void disconnectClient(int fd);
+    void removeChannel(const std::string &name);
+
+    void updatePollEvents(int fd);
+    void flushClient(int fd);
+
+    Channel *findChannel(const std::string &name);
+    Channel &createChannel(const std::string &name);
+
+    Client *findNick(const std::string &nickname);
+
+    void queue(Client &client, const std::string &message);
+
+    const std::string &getPassword() const;
+    const std::string &serverName() const;
 };
 
