@@ -444,12 +444,10 @@ void CommandHandler::handlePrivmsg(
     const std::string &text =
         command.getParameters()[1];
 
-    /*
-     * Поки без hostname, бо Client API його не дає.
-     */
     const std::string message =
         ":" + client.getNickname()
         + "!" + client.getUsername()
+        + "@" + client.getHostname()
         + " PRIVMSG "
         + target
         + " :" + text;
