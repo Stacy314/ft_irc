@@ -71,7 +71,13 @@ bool startsWith(const std::string &s, const std::string &prefix) {
     return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
 }
 
-std::string intToString(int n) {
+std::string numToString(int n) {
+    std::ostringstream oss;
+    oss << n;
+    return oss.str();
+}
+
+std::string numToString(size_t n) {
     std::ostringstream oss;
     oss << n;
     return oss.str();

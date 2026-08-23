@@ -87,10 +87,15 @@ void Client::setRealname(const std::string &name) {
     fullname = name;
 }
 
-//const std::string &Client::getHostname() const
-//{
-//    return host;
-//}
+const std::string &Client::getHostname() const
+{
+    return host;
+}
+
+int Client::getFd() const
+{
+    return fd;
+}
 
 void Client::setUserReceived(bool value) {
     userReceived = value;

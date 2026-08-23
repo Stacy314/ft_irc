@@ -1,10 +1,7 @@
 #pragma once
 
-#include <string>
-#include <set>
-#include <map>
+#include "Utils.hpp"
 #include "Client.hpp"
-#include <cstddef>
 
 enum ChannelResult
 {
@@ -42,35 +39,39 @@ class Channel
         bool							inviteOnly;
         bool							protectedTopic;
         size_t							counter;
-		ChannelResult					returnCode;
-
-  
 
 		std::map<Client*, MemberInfo>::iterator			findMember(Client*);
 		std::map<Client*, MemberInfo>::const_iterator	findMember(Client*) const;
-		bool											acceptsKey(const std::string&) const;
+		bool											correctKey(const std::string&) const;
 		bool											isInvited(Client*) const;
         void                                            ensureOperator();
-		ChannelResult									accessCheck(Client*);
-		ChannelResult									accessCheck(Client*, Client*);
+		ChannelResult									requireAccess(Client*, bool) const;
+		ChannelResult									requireTarget(Client*) const;
+        Channel();
     public:
 		Channel& operator=(const Channel&);
 		Channel(const Channel&);
-        Channel();
         Channel(const std::string&);
         ~Channel();
-        bool            isEmpty() const;
-        size_t          size() const;
-        bool            isMember(Client*) const;
-        bool            isOperator(Client*) const;
-        ChannelResult	setOperator(Client*, Client*, bool);
-		ChannelResult	setTopic(const std::string&, Client*);
-        ChannelResult   addMember(Client*, const std::string&);
-		ChannelResult   removeMember(Client*); //QUIT
-		ChannelResult   kickMember(Client*, Client*); //KICK
-		ChannelResult   inviteMember(Client*, Client*); //INVITE
-		ChannelResult   setInviteOnly(bool, Client*); //MODE +i/-i
-		ChannelResult   setProtectedTopic(bool, Client*); //MODE +t/-t
-		ChannelResult   setUserLimit(size_t, Client*); //MODE +l/-l
-		ChannelResult   setKey(const std::string&, Client*);
+        size_t          	  size() const;
+        bool            	  isEmpty() const;
+        bool            	  isMember(Client*) const;
+        bool            	  isOperator(Client*) const;
+		bool				  isFull() const;
+		bool				  hasKey() const;
+        bool                  hasTopic() const;
+		const std::string&	  getTopic() const;
+        const std::string&    getName() const;
+        std::string           getMode(Client*) const; //MODE no arguments
+        std::vector<Client*>  getMembers() const;
+        ChannelResult		  setOperator(Client*, Client*, bool);
+		ChannelResult   	  setInviteOnly(Client*, bool); //MODE +i/-i
+		ChannelResult   	  setProtectedTopic(Client*, bool); //MODE +t/-t
+		ChannelResult   	  setUserLimit(Client*, size_t); //MODE +l/-l
+		ChannelResult   	  setKey(Client*, const std::string&); //MODE +k
+		ChannelResult		  setTopic(Client*, const std::string&);
+        ChannelResult   	  addMember(Client*, const std::string&);
+		ChannelResult   	  inviteMember(Client*, Client*); //INVITE
+		ChannelResult   	  removeMember(Client*); //QUIT
+		ChannelResult   	  kickMember(Client*, Client*); //KICK
 };
