@@ -194,7 +194,7 @@ void Server::flushClient(int fd)
 		updatePollEvents(fd);
 		return;
 	}
-	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
+	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR //fixit please!!!!!!!!!!!!!!!!!!!!!!!!!
 		return;
 	disconnectClient(fd);
 }
