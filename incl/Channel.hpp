@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Utils.hpp"
+#include "CommandUtils.hpp"
 #include "Client.hpp"
 
 enum ChannelResult

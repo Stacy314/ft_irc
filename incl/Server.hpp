@@ -16,7 +16,7 @@
 #include <iostream>
 #include <fcntl.h>
 
-#include "Utils.hpp"
+#include "CommandUtils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
@@ -34,6 +34,7 @@
 class Server
 {
 private:
+    int fd;
     size_t port;
     std::string password;
     int serverFd;
@@ -51,7 +52,6 @@ public:
     Server();
     ~Server();
     int getPort();
-    std::string getPassword();
     void setPort(size_t port);
     void setPassword(std::string password);
     void start();
@@ -62,7 +62,7 @@ public:
     void addPollfd(int fd);
     void acceptClient();
     void reciveCom(int fd);
-    void disconnectClient(int fd);
+    void disconnectClient(Client &client);
     void removeChannel(const std::string &name);
     void updatePollEvents(int fd);
     void flushClient(int fd);

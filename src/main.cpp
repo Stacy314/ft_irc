@@ -1,6 +1,6 @@
 
 #include "../incl/Server.hpp"
-#include "../incl/Utils.hpp"
+#include "../incl/CommandUtils.hpp"
 #include "../incl/Parser.hpp"
 #include "../incl/Command.hpp"
 #include "../incl/Client.hpp"

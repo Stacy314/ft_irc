@@ -2,18 +2,7 @@
 #include "../incl/Parser.hpp"
 #include <cerrno>
 
-
-Server::Server() : _handler(*this)
-{
-	this->port = 0;
-	this->password = "0";
-	this->serverFd = -1;
-	this->runing = false;
-	this->_serverName = "ircserv";
-
-}
-
-Server::Server(size_t port, const std::string &password) : _handler(*this)
+Server::Server(size_t port, const std::string &password) : _handler(*this) 
 {
 	this->port = port;
 	this->password = password;
@@ -23,30 +12,11 @@ Server::Server(size_t port, const std::string &password) : _handler(*this)
 
 }
 
-// Server::Server(const Server& obj)
-// {	
-// 	*this = obj;
-// }
-
-// Server& Server::operator=(const Server&  obj)
-// {
-// 	if (this == &obj)
-// 		return *this;
-// 	this->port = obj.port;
-// 	this->password = obj.password;
-// 	return *this;
-// }
-
 Server::~Server(){}
 
 int Server::getPort()
 {
 	return (this->port);
-}
-
-std::string Server::getPassword()
-{
-	return (this->password);
 }
 
 void Server::setPort(size_t  port)
@@ -57,6 +27,16 @@ void Server::setPort(size_t  port)
 void Server::setPassword(std::string password)
 {
 	this->password = password;
+}
+
+const std::string &Server::getPassword() const 
+{
+    return password;
+}
+
+const std::string &Server::serverName() const 
+{
+    return _serverName;
 }
 
 void Server::createSocket()
@@ -108,11 +88,8 @@ void	Server::acceptClient()
 	newfd = accept(serverFd, reinterpret_cast<sockaddr *>(&clientAddr),
 		&clientAddrLen);
 	if (newfd == -1)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return;
-		throw std::runtime_error("Failed to accept client!");
-	}
+		return;
+
 	if (fcntl(newfd, F_SETFL, O_NONBLOCK) == -1)
 	{
 		close(newfd);
@@ -135,35 +112,45 @@ void Server::removeChannel(const std::string &name)
 	_channels.erase(name);
 }
 
-void Server::disconnectClient(int fd)
+void Server::disconnectClient(Client &client)
 {
-	std::map<int, Client>::iterator clientIt = clients.find(fd);
-	if (clientIt == clients.end())
-		return;
-	Client *client = &clientIt->second;
-	std::map<std::string, Channel>::iterator channelIt = _channels.begin();
-	while (channelIt != _channels.end())
-	{
-		ChannelResult result = channelIt->second.removeMember(client);
-		if (result == CHANNEL_EMPTY)
-		{
-			std::map<std::string, Channel>::iterator emptyChannel = channelIt++;
-			_channels.erase(emptyChannel);
-		}
-		else
-			++channelIt;
-	}
-	close(fd);
-	clients.erase(clientIt);
-	for (std::vector<pollfd>::iterator pfd = pollfds.begin();
-		pfd != pollfds.end(); ++pfd)
-	{
-		if (pfd->fd == fd)
-		{
-			pollfds.erase(pfd);
-			break;
-		}
-	}
+    int fd = client.getFd();
+
+    std::map<std::string, Channel>::iterator channelIt =
+        _channels.begin();
+
+    while (channelIt != _channels.end())
+    {
+        ChannelResult result =
+            channelIt->second.removeMember(&client);
+
+        if (result == CHANNEL_EMPTY)
+        {
+            std::map<std::string, Channel>::iterator empty =
+                channelIt++;
+
+            _channels.erase(empty);
+        }
+        else
+        {
+            ++channelIt;
+        }
+    }
+
+    close(fd);
+
+    for (std::vector<pollfd>::iterator it = pollfds.begin();
+         it != pollfds.end();
+         ++it)
+    {
+        if (it->fd == fd)
+        {
+            pollfds.erase(it);
+            break;
+        }
+    }
+
+    clients.erase(fd);
 }
 
 void Server::updatePollEvents(int fd)
@@ -181,89 +168,166 @@ void Server::updatePollEvents(int fd)
 	}
 }
 
-void Server::flushClient(int fd)
-{
-	std::map<int, Client>::iterator it = clients.find(fd);
-	if (it == clients.end() || it->second.outbuf.empty())
-		return;
+// void Server::flushClient(int fd)
+// {
+// 	std::map<int, Client>::iterator it = clients.find(fd);
+// 	if (it == clients.end() || it->second.outbuf.empty())
+// 		return;
 
-	ssize_t bytes = send(fd, it->second.outbuf.data(), it->second.outbuf.size(), 0);
-	if (bytes > 0)
-	{
-		it->second.outbuf.erase(0, bytes);
-		updatePollEvents(fd);
-		return;
-	}
-	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
-		return;
-	disconnectClient(fd);
+// 	ssize_t bytes = send(fd, it->second.outbuf.data(), it->second.outbuf.size(), 0);
+// 	if (bytes > 0)
+// 	{
+// 		it->second.outbuf.erase(0, bytes);
+// 		updatePollEvents(fd);
+// 		return;
+// 	}
+// 	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
+// 		return;
+// 	disconnectClient(Client &client);
+// }
+
+void Server::flushClient(int fd) {
+	std::map<int, Client>::iterator it = clients.find(fd);
+
+    if (it == clients.end() || it->second.outbuf.empty())
+        return;
+
+    ssize_t bytes = send(fd, it->second.outbuf.data(), it->second.outbuf.size(), 0);
+
+    if (bytes > 0) {
+        it->second.outbuf.erase(0, bytes);
+        updatePollEvents(fd);
+    }
 }
+
+// void Server::reciveCom(int fd)
+// {
+// 	char buffer[1024];
+// 	std::map<int, Client>::iterator it = clients.find(fd);
+// 	if (it == clients.end())
+// 		return;
+
+// 	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
+// 	if (bytes > 0)
+// 	{
+// 		Client &client = it->second;
+// 		client.inbuf.append(buffer, bytes);
+
+// 		std::string::size_type end;
+// 		while ((end = client.inbuf.find("\r\n")) != std::string::npos)
+// 		{
+// 			std::string line = client.inbuf.substr(0, end);
+// 			client.inbuf.erase(0, end + 2);
+// 			if (!line.empty())
+// 			{
+// 				_handler.execute(client, Parser::parse(line));
+// 			}
+// 		}
+// 		return;
+// 	}
+
+// 	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
+// 		return;
+
+// 	disconnectClient(Client &client);
+// }
 
 void Server::reciveCom(int fd)
 {
-	char buffer[1024];
-	std::map<int, Client>::iterator it = clients.find(fd);
-	if (it == clients.end())
-		return;
+    char buffer[1024];
+    std::map<int, Client>::iterator it = clients.find(fd);
 
-	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
-	if (bytes > 0)
-	{
-		Client &client = it->second;
-		client.inbuf.append(buffer, bytes);
+    if (it == clients.end())
+        return;
 
-		std::string::size_type end;
-		while ((end = client.inbuf.find("\r\n")) != std::string::npos)
-		{
-			std::string line = client.inbuf.substr(0, end);
-			client.inbuf.erase(0, end + 2);
-			if (!line.empty())
-			{
-				_handler.execute(client, Parser::parse(line));
-			}
-		}
-		return;
-	}
+    ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
 
-	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
-		return;
+    if (bytes > 0)
+    {
+        Client &client = it->second;
 
-	disconnectClient(fd);
+        client.inbuf.append(
+            buffer,
+            static_cast<std::size_t>(bytes)
+        );
+
+        std::string::size_type end;
+
+        while ((end = client.inbuf.find("\r\n"))
+            != std::string::npos)
+        {
+            std::string line =
+                client.inbuf.substr(0, end);
+
+            client.inbuf.erase(0, end + 2);
+
+            if (!line.empty())
+                _handler.execute(
+                    client,
+                    Parser::parse(line)
+                );
+        }
+
+        return;
+    }
+
+    if (bytes == 0)
+    {
+        disconnectClient(it->second);
+        return;
+    }
 }
 
-void  Server::pollLoop()
+void Server::pollLoop()
 {
-	while (runing)
-	{
-		if (poll(&pollfds[0], pollfds.size(), -1) == -1)
-		{
-			if (errno == EINTR)
-				continue;
-			throw std::runtime_error("Poll failed!");
-		}
-		for (size_t i = 0; i < pollfds.size(); )
-		{
-			int fd = pollfds[i].fd;
-			short revents = pollfds[i].revents;
-			if (fd == serverFd)
-			{
-				if (revents & POLLIN)
-					acceptClient();
-				++i;
-				continue;
-			}
-			if (revents & POLLIN)
-				reciveCom(fd);
-			if (clients.find(fd) != clients.end() && (revents & POLLOUT))
-				flushClient(fd);
-			if (clients.find(fd) != clients.end()
-				&& (revents & (POLLERR | POLLHUP | POLLNVAL)))
-				disconnectClient(fd);
-			if (i < pollfds.size() && pollfds[i].fd == fd)
-				++i;
-		}
+    while (runing)
+    {
+        if (poll(&pollfds[0], pollfds.size(), -1) == -1)
+        {
+            if (errno == EINTR)
+                continue;
+            throw std::runtime_error("Poll failed!");
+        }
 
-	}
+        for (size_t i = 0; i < pollfds.size(); )
+        {
+            int fd = pollfds[i].fd;
+            short revents = pollfds[i].revents;
+
+            if (fd == serverFd)
+            {
+                if (revents & POLLIN)
+                    acceptClient();
+
+                ++i;
+                continue;
+            }
+
+            if (revents & POLLIN)
+                reciveCom(fd);
+
+            if (clients.find(fd) != clients.end()
+                && (revents & POLLOUT))
+            {
+                flushClient(fd);
+            }
+
+            std::map<int, Client>::iterator clientIt =
+                clients.find(fd);
+
+            if (clientIt != clients.end()
+                && (revents & (POLLERR | POLLHUP | POLLNVAL)))
+            {
+                disconnectClient(clientIt->second);
+            }
+
+            if (i < pollfds.size()
+                && pollfds[i].fd == fd)
+            {
+                ++i;
+            }
+        }
+    }
 }
 
 void Server::start()
@@ -280,15 +344,6 @@ void Server::start()
 	pollLoop();
 }
 
-const std::string &Server::getPassword() const {
-    return password;
-}
-
-
-const std::string &Server::serverName() const {
-    return _serverName;
-}
-
 Channel *Server::findChannel(const std::string &name)
 {
     std::map<std::string, Channel>::iterator it =
@@ -299,6 +354,7 @@ Channel *Server::findChannel(const std::string &name)
 
     return &(it->second);
 }
+
 Channel &Server::createChannel(const std::string &name) {
     std::pair<
         std::map<std::string, Channel>::iterator,
@@ -322,9 +378,7 @@ Client *Server::findNick(const std::string &nickname) {
     return NULL;
 }
 
-void Server::queue(
-    Client &client,
-    const std::string &message)
+void Server::queue(Client &client, const std::string &message)
 {
     client.outbuf += message;
 	updatePollEvents(client.getFd());

@@ -1,6 +1,6 @@
 #include "../incl/CommandHandler.hpp"
 #include "../incl/Server.hpp"
-#include "../incl/Utils.hpp"
+#include "../incl/CommandUtils.hpp"
 
 void CommandHandler::sendNumeric(Client &client, const std::string &code,
                  const std::string &params, const std::string &text)

@@ -1,6 +1,10 @@
 #pragma once 
 
 #include "Command.hpp"
+#include "CommandUtils.hpp"
+
+#include <cctype>
+#include <vector>
 #include <string>
 
 class Parser {
