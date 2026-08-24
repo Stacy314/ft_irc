@@ -181,6 +181,9 @@ void Server::updatePollEvents(int fd)
 	}
 }
 
+//NO ERNO
+
+
 void Server::flushClient(int fd)
 {
 	std::map<int, Client>::iterator it = clients.find(fd);
@@ -194,7 +197,7 @@ void Server::flushClient(int fd)
 		updatePollEvents(fd);
 		return;
 	}
-	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR //fixit please!!!!!!!!!!!!!!!!!!!!!!!!!
+	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))//fixit please!!!!!!!!!!!!!!!!!!!!!!!!!
 		return;
 	disconnectClient(fd);
 }
@@ -225,7 +228,7 @@ void Server::reciveCom(int fd)
 		return;
 	}
 
-	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
+	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) 
 		return;
 
 	disconnectClient(fd);
