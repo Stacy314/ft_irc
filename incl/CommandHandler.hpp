@@ -15,7 +15,7 @@ private:
     Server &_server;
     void sendReply(Client &client, const std::string &message);
     void tryRegister(Client &client);
-    bool isValidNickname(const std::string &nickname) const;
+    bool isValidNickname(Client &client, const std::string &nickname);
 	void handlePass(Client &client, const Command &command);
 	void handleNick(Client &client, const Command &command);
 	void handleUser(Client &client, const Command &command);
@@ -32,6 +32,8 @@ private:
 	void handleInvite(Client&, const Command&);
 	void handleKick(Client&, const Command&);
 	void handleMode(Client&, const Command&);
+	void handlePart(Client &client, const Command &command);
+	void handleQuit(Client &client, const Command &command);
 
 	void sendNumeric(Client &client, const std::string &code,
                  const std::string &params, const std::string &text);

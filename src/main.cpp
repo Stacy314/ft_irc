@@ -12,7 +12,6 @@
 #include "../incl/CommandTests.hpp"
 #include "../incl/ChannelTests.hpp"
 
-
 size_t parse_port(const std::string& str)
 {
    std::stringstream ss(str);

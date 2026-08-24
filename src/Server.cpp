@@ -329,3 +329,28 @@ void Server::queue(
     client.outbuf += message;
 	updatePollEvents(client.getFd());
 }
+
+void Server::broadcastQuit(Client &client, const std::string &message) {
+    std::set<Client *> receivers;
+
+    std::map<std::string, Channel>::iterator it = _channels.begin();
+
+    while (it != _channels.end()) {
+        if (it->second.isMember(&client)) {
+            const std::vector<Client *> &members = it->second.getMembers();
+
+            for (std::vector<Client *>::const_iterator m = members.begin();
+                m != members.end(); ++m) {
+                if (*m != &client)
+                    receivers.insert(*m);
+            }
+        }
+        ++it;
+    }
+
+	for (std::set<Client *>::iterator it = receivers.begin();
+		it != receivers.end(); ++it)
+	{
+		queue(**it, message + "\r\n");
+	}
+}
