@@ -73,5 +73,6 @@ public:
     const std::string &getPassword() const;
     const std::string &serverName() const;
 	void broadcastQuit(Client &client, const std::string &message);
+    std::map<std::string, Channel> &getChannels();
 };
 

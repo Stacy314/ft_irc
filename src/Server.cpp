@@ -39,6 +39,11 @@ const std::string &Server::serverName() const
     return _serverName;
 }
 
+std::map<std::string, Channel> &Server::getChannels()
+{
+    return _channels;
+}
+
 void Server::createSocket()
 {
 	serverFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -408,3 +413,4 @@ void Server::broadcastQuit(Client &client, const std::string &message) {
 		queue(**it, message + "\r\n");
 	}
 }
+
