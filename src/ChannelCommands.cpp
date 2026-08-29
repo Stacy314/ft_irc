@@ -37,10 +37,10 @@ void CommandHandler::channelMessaging(Channel* channel,
     }
 }
 
-void CommandHandler::channelMessaging(std::vector<Client*> members,
+void CommandHandler::channelMessaging(const std::vector<Client*>& members,
     const std::string &message, Client* receiver)
 {
-    for (std::vector<Client*>::iterator it
+    for (std::vector<Client*>::const_iterator it
             = members.begin(); it != members.end(); ++it)
     {
         if (*it != receiver)
@@ -148,7 +148,10 @@ void CommandHandler::handleKick(Client& client, const Command& command)
             + channel->getName() + " " + target->getNickname()
             + " :" + reason;
     channelMessaging(members, message);
-    //if (result == CHANNEL_EMPTY) <--- remove channel from server
+    if (result == CHANNEL_EMPTY)
+    {
+        _server.removeChannel(channel->getName());
+    }
 }
 
 void CommandHandler::handleMode(Client& client, const Command& command)
@@ -156,7 +159,8 @@ void CommandHandler::handleMode(Client& client, const Command& command)
     if (!client.isRegistered())
         return sendNumeric(client, "451", "", "You have not registered");
 
-    if (command.getParameters().empty())
+    if (command.getParameters().empty()
+        || command.getParameters()[0].empty())
         return sendNumeric(client, "461", "MODE", "Not enough parameters");
     else if (command.getParameters()[0][0] == '#')
     {
@@ -182,6 +186,8 @@ void CommandHandler::handleMode(Client& client, const Command& command)
             std::string successedModes = "";
             std::string successedParams = "";
             std::string modeChange = command.getParameters()[1];
+            if (modeChange.empty())
+                return sendNumeric(client, "461", "MODE", "Not enough parameters");
             bool settingMode = (modeChange[0] == '+');
             size_t argIndex = 2;
             for (size_t i = 1; i < modeChange.size(); ++i)
@@ -242,7 +248,7 @@ void CommandHandler::handleMode(Client& client, const Command& command)
                         continue;
                     }
                     argIndex++;
-                    if (!isNumber(argument))
+                    if (argument.find_first_not_of("0123456789") != std::string::npos)
                     {
                         sendNumeric(client, "461", "MODE", "Invalid parameter");
                         continue;
@@ -292,7 +298,7 @@ void CommandHandler::handleMode(Client& client, const Command& command)
                 }
                 std::string channelMsg = buildPrefix(client) + " MODE " + channel->getName() + " " + successedModes;
                 if (!successedParams.empty())
-                    channelMsg += " " + successedParams;
+                    channelMsg += successedParams;
                 channelMessaging(channel, channelMsg);
             }
         }
