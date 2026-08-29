@@ -414,3 +414,42 @@ void Server::broadcastQuit(Client &client, const std::string &message) {
 	}
 }
 
+void Server::broadcastNickChange(Client &client, const std::string &message) {
+    std::set<Client *> receivers;
+
+    for (
+        std::map<std::string, Channel>::iterator it =
+            _channels.begin();
+        it != _channels.end();
+        ++it
+    )
+    {
+        Channel &channel = it->second;
+
+        if (!channel.isMember(&client))
+            continue;
+
+        const std::vector<Client *> &members =
+            channel.getMembers();
+
+        for (
+            std::vector<Client *>::const_iterator member =
+                members.begin();
+            member != members.end();
+            ++member
+        )
+        {
+            receivers.insert(*member);
+        }
+    }
+
+    for (
+        std::set<Client *>::iterator it =
+            receivers.begin();
+        it != receivers.end();
+        ++it
+    )
+    {
+        queue(**it, message + "\r\n");
+    }
+}

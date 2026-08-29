@@ -1681,6 +1681,49 @@ def test_split_crlf():
     finally:
         client.close()
 
+# ============================================================================
+# HANDLE PING
+# ============================================================================
+
+def test_ping_pong():
+    section("PING / PONG")
+
+    client = IRCClient("ping")
+
+    try:
+        client.connect()
+        client.register("pinguser")
+        client.clear()
+
+        client.send("PING :hello123")
+
+        response = client.read()
+
+        check(
+            "PING receives PONG",
+            "PONG" in response
+            and "hello123" in response,
+            response
+        )
+
+        client.send("PING")
+
+        response = client.read()
+
+        check(
+            "PING without parameter -> 409",
+            " 409 " in response,
+            response
+        )
+
+        check(
+            "Server alive after PING",
+            server_alive()
+        )
+
+    finally:
+        client.close()
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -1732,6 +1775,26 @@ def main():
         test_abrupt_disconnect()
 
         test_quit()
+        test_ping_pong()
+
+        test_split_crlf()
+        test_many_clients()
+        test_operator_leaves()
+        test_empty_channel_recreation()
+        test_quit_broadcast()
+        test_nick_change()
+        test_message_after_part()
+        test_privmsg_unknown_channel()
+        test_privmsg_unknown_nick()
+        test_part_not_member()
+        test_part_nonexistent_channel()
+        test_duplicate_join()
+        test_case_insensitive_nick()
+        test_disconnect_mid_command()
+        test_incomplete_client_does_not_block()
+        test_multiple_commands_one_packet()
+        test_missing_parameters()
+        test_commands_before_registration()
 
     finally:
         stop_server()

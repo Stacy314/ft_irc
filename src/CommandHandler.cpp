@@ -34,6 +34,8 @@ void CommandHandler::execute(Client &client, const Command &command) {
        handlePart(client, command);
     else if (cmd == "QUIT")
         handleQuit(client, command);
+    else if (command.getName() == "PING")
+        handlePing(client, command);
     else
     {
         sendReply(
@@ -80,7 +82,7 @@ void CommandHandler::handlePass(Client &client, const Command &command) {
     }
 
     client.setPasswordAccepted(true);
-	// std::cout << "Password accepted for client" << std::endl;
+	std::cout << "Password accepted for client" << std::endl;
     tryRegister(client);
 }
 
@@ -96,12 +98,21 @@ void CommandHandler::handleNick(Client &client, const Command &command) {
         );
         return;
     }
-
     std::string newNickname = command.getParameters()[0];
     const std::size_t NICKLEN = 30;
-
     if (newNickname.size() > NICKLEN)
         newNickname = newNickname.substr(0, NICKLEN);
+
+    if (client.isRegistered()) {
+        const std::string message =
+            buildPrefix(client)
+            + " NICK :"
+            + newNickname;
+
+        _server.broadcastNickChange(client, message);
+        client.setNickname(newNickname);
+        return;
+    }
 
     if (!isValidNickname(newNickname)) {
         sendReply(
@@ -129,7 +140,7 @@ void CommandHandler::handleNick(Client &client, const Command &command) {
         return;
     }
     client.setNickname(newNickname);
-	// std::cout << "Nickname accepted for client" << std::endl;
+	std::cout << "Nickname accepted for client" << std::endl;
     tryRegister(client);
 }
 
@@ -161,7 +172,7 @@ void CommandHandler::handleUser(Client &client, const Command &command) {
     client.setUsername(command.getParameters()[0]);
     client.setRealname(command.getParameters()[3]);
 	client.setUserReceived(true);
-	// std::cout << "User accepted for client" << std::endl;
+	std::cout << "User accepted for client" << std::endl;
     tryRegister(client);
 }
 
@@ -320,8 +331,7 @@ void CommandHandler::handleChannelResult(Client &client, ChannelResult result, c
 // ============================================================================
 //                           HANDLE JOIN
 // ============================================================================
-void CommandHandler::handleJoinZero(Client &client)
-{
+void CommandHandler::handleJoinZero(Client &client) {
     std::map<std::string, Channel> &channels = _server.getChannels();
     std::map<std::string, Channel>::iterator it = channels.begin();
 
@@ -541,6 +551,14 @@ void CommandHandler::handlePart(Client &client, const Command &command) {
         return;
     }
 
+    if (!client.isRegistered()) {
+        sendReply(
+            client,
+            ":ircserv 451 * :You have not registered"
+        );
+        return;
+    }
+
     const std::string channelName = command.getParameters()[0];
     Channel *channel = _server.findChannel(channelName);
 
@@ -608,4 +626,27 @@ void CommandHandler::handleQuit(Client &client, const Command &command) {
 
     _server.broadcastQuit(client, message);
     _server.disconnectClient(client);
+}
+
+
+// ============================================================================
+//                         HANDLE PING
+// ============================================================================
+
+void CommandHandler::handlePing(Client &client, const Command &command) {
+    if (command.getParameters().empty()) {
+        sendReply(
+            client,
+            ":ircserv 409 "
+            + client.getNickname()
+            + " :No origin specified"
+        );
+        return;
+    }
+
+    sendReply(
+        client,
+        ":ircserv PONG ircserv :"
+        + command.getParameters()[0]
+    );
 }
