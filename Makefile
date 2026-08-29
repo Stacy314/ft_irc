@@ -1,8 +1,8 @@
 NAME     = ircserv
 CXX		 = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -MMD -MP
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -MMD -MP -pedantic
 SRC		 = src/main.cpp src/Server.cpp src/Client.cpp \
-		   src/Channel.cpp src/Utils.cpp src/Parser.cpp \
+		   src/Channel.cpp src/CommandUtils.cpp src/Parser.cpp \
 		   src/Command.cpp src/CommandHandler.cpp \
 		   src/CommandTests.cpp src/ChannelTests.cpp \
 		   src/ChannelCommands.cpp

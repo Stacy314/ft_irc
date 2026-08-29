@@ -24,12 +24,10 @@ Client::Client(const Client &other)
       host(other.host),
       nick(other.nick),
       user(other.user),
-	  fullname(other.fullname),
       pass(other.pass),
       registered(other.registered),
       quit(other.quit),
-	  outbuf(other.outbuf),
-	  inbuf(other.inbuf)
+      outbuf(other.outbuf)
 {}
 
 Client &Client::operator=(const Client &other) {
@@ -39,12 +37,10 @@ Client &Client::operator=(const Client &other) {
         host = other.host;
         nick = other.nick;
         user = other.user;
-		fullname = other.fullname;
         pass = other.pass;
         registered = other.registered;
         quit = other.quit;
         outbuf = other.outbuf;
-		inbuf = other.inbuf;
     }
     return *this;
 }
@@ -91,14 +87,17 @@ void Client::setRealname(const std::string &name) {
     fullname = name;
 }
 
-const std::string &Client::getHostname() const
-{
-    return host;
-}
-
 int Client::getFd() const
 {
     return fd;
+}
+
+void Client::setHostname(const std::string &hostname) {
+    host = hostname;
+}
+
+const std::string &Client::getHostname() const {
+    return host;
 }
 
 void Client::setUserReceived(bool value) {

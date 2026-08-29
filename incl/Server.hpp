@@ -10,14 +10,13 @@
 #include <poll.h>
 #include <vector>
 #include <map>
-#include "Utils.hpp"
 #include <utility>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <fcntl.h>
 
-#include "Utils.hpp"
+#include "CommandUtils.hpp"
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
@@ -32,10 +31,10 @@
 # define KCYN  "\x1B[36m"
 # define KWHT  "\x1B[37m"
 
-
 class Server
 {
 private:
+    int fd;
     size_t port;
     std::string password;
     int serverFd;
@@ -44,9 +43,7 @@ private:
     std::map<int, Client> clients;
     std::string _serverName;
     std::map<std::string, Channel> _channels;
-
     CommandHandler _handler;
-
     Server(const Server &other);
     Server &operator=(const Server &other);
 
@@ -54,38 +51,28 @@ public:
     Server(size_t port, const std::string &password);
     Server();
     ~Server();
-
     int getPort();
-    std::string getPassword();
-
     void setPort(size_t port);
     void setPassword(std::string password);
-
     void start();
-
     void createSocket();
     void bindSocket();
     void listenSocket();
     void pollLoop();
-
     void addPollfd(int fd);
     void acceptClient();
     void reciveCom(int fd);
-
-    void disconnectClient(int fd);
+    void disconnectClient(Client &client);
     void removeChannel(const std::string &name);
-
     void updatePollEvents(int fd);
     void flushClient(int fd);
-
     Channel *findChannel(const std::string &name);
     Channel &createChannel(const std::string &name);
-
     Client *findNick(const std::string &nickname);
-
     void queue(Client &client, const std::string &message);
-
     const std::string &getPassword() const;
     const std::string &serverName() const;
+	void broadcastQuit(Client &client, const std::string &message);
+    std::map<std::string, Channel> &getChannels();
 };
 

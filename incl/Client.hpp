@@ -41,5 +41,4 @@ public:
 	bool isUserReceived() const;
 	void setUserReceived(bool value);
     int getFd() const;
-    const std::string& getHostname() const;
 };

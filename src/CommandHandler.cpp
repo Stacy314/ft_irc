@@ -1,7 +1,5 @@
 #include "../incl/CommandHandler.hpp"
 #include "../incl/Server.hpp"
-#include "../incl/Utils.hpp"
-
 
 CommandHandler::CommandHandler(Server &server) : _server(server) {}
 
@@ -30,6 +28,10 @@ void CommandHandler::execute(Client &client, const Command &command) {
         handleInvite(client, command);
     else if (cmd == "KICK")
         handleKick(client, command);
+	else if (cmd == "PART")
+       handlePart(client, command);
+    else if (cmd == "QUIT")
+        handleQuit(client, command);
     else
     {
         sendReply(
@@ -43,13 +45,17 @@ void CommandHandler::execute(Client &client, const Command &command) {
     }
 }
 
+// ============================================================================
+//                                HANDLE PASS
+// ============================================================================
+
 void CommandHandler::handlePass(Client &client, const Command &command) {
-    if (client.isRegistered())     {
+    if (client.isRegistered()) {
         sendReply(
             client,
             ":ircserv 462 "
             + client.getNickname()
-            + " :You may not reregister"
+            + " :You are alredy registered"
         );
         return;
     }
@@ -63,6 +69,7 @@ void CommandHandler::handlePass(Client &client, const Command &command) {
     }
 
     if (command.getParameters()[0] != _server.getPassword()) {
+        client.setPasswordAccepted(false);
         sendReply(
             client,
             ":ircserv 464 * :Password incorrect"
@@ -71,29 +78,13 @@ void CommandHandler::handlePass(Client &client, const Command &command) {
     }
 
     client.setPasswordAccepted(true);
+	// std::cout << "Password accepted for client" << std::endl;
     tryRegister(client);
 }
 
-bool CommandHandler::isValidNickname(const std::string &nickname) const {
-    if (nickname.empty())
-        return false;
-
-    if (!std::isalpha(
-            static_cast<unsigned char>(nickname[0]))
-        && !isNickSpecial(nickname[0])) {
-        return false;
-    }
-
-    for (std::size_t i = 1; i < nickname.size(); ++i) {
-        if (!std::isalnum(
-                static_cast<unsigned char>(nickname[i]))
-            && nickname[i] != '-'
-            && !isNickSpecial(nickname[i])) {
-            return false;
-        }
-    }
-    return true;
-}
+// ============================================================================
+//                              HANDLE NICK
+// ============================================================================
 
 void CommandHandler::handleNick(Client &client, const Command &command) {
     if (command.getParameters().empty()) {
@@ -104,7 +95,11 @@ void CommandHandler::handleNick(Client &client, const Command &command) {
         return;
     }
 
-    const std::string &newNickname = command.getParameters()[0];
+    std::string newNickname = command.getParameters()[0];
+    const std::size_t NICKLEN = 30;
+
+    if (newNickname.size() > NICKLEN)
+        newNickname = newNickname.substr(0, NICKLEN);
 
     if (!isValidNickname(newNickname)) {
         sendReply(
@@ -131,20 +126,14 @@ void CommandHandler::handleNick(Client &client, const Command &command) {
         );
         return;
     }
-
-    /*
-     * ВАЖЛИВО:
-     * nickname треба реально встановити.
-     */
     client.setNickname(newNickname);
-
-    /*
-     * Якщо client вже registered, пізніше тут
-     * треба буде broadcast NICK change по каналах.
-     */
-
+	// std::cout << "Nickname accepted for client" << std::endl;
     tryRegister(client);
 }
+
+// ============================================================================
+//                                 HANDLE USER
+// ============================================================================
 
 void CommandHandler::handleUser(Client &client, const Command &command) {
     if (client.isRegistered())     {
@@ -162,7 +151,7 @@ void CommandHandler::handleUser(Client &client, const Command &command) {
             client,
             ":ircserv 461 "
             + client.getNickname()
-            + " USER :Not enough parameters"
+            + " USER :Usage: USER <username> 0 * :<realname>"
         );
         return;
     }
@@ -170,8 +159,13 @@ void CommandHandler::handleUser(Client &client, const Command &command) {
     client.setUsername(command.getParameters()[0]);
     client.setRealname(command.getParameters()[3]);
 	client.setUserReceived(true);
+	// std::cout << "User accepted for client" << std::endl;
     tryRegister(client);
 }
+
+// ============================================================================
+//                               REGISTRATION
+// ============================================================================
 
 void CommandHandler::tryRegister(Client &client) {
     if (client.isRegistered())
@@ -210,6 +204,10 @@ void CommandHandler::tryRegister(Client &client) {
     );
 }
 
+// ============================================================================
+//                               HANDLE CHANNEL RESULTS
+// ============================================================================
+
 void CommandHandler::handleChannelResult(Client &client, ChannelResult result, const std::string &channelName, const std::string &target) {
     const std::string nick =
         client.getNickname().empty()
@@ -221,10 +219,6 @@ void CommandHandler::handleChannelResult(Client &client, ChannelResult result, c
     }
 
     if (result == CHANNEL_EMPTY) {
-        /*
-         * Це НЕ IRC error.
-         * Пізніше Server може видалити channel.
-         */
         return;
     }
 
@@ -321,21 +315,55 @@ void CommandHandler::handleChannelResult(Client &client, ChannelResult result, c
     }
 }
 
-void CommandHandler::handleJoin(
-    Client &client,
-    const Command &command)
+// ============================================================================
+//                           HANDLE JOIN
+// ============================================================================
+void CommandHandler::handleJoinZero(Client &client)
 {
-    if (!client.isRegistered())
-    {
+    std::map<std::string, Channel> &channels = _server.getChannels();
+    std::map<std::string, Channel>::iterator it = channels.begin();
+
+    while (it != channels.end()) {
+        Channel &channel = it->second;
+
+        if (!channel.isMember(&client)) {
+            ++it;
+            continue;
+        }
+
+        const std::string message =
+            buildPrefix(client)
+            + " PART "
+            + it->first
+            + " :Left all channels";
+
+        channelMessaging(
+            &channel,
+            message
+        );
+
+        ChannelResult result = channel.removeMember(&client);
+
+        if (result == CHANNEL_EMPTY) {
+            std::map<std::string, Channel>::iterator toDelete = it;
+            ++it;
+            channels.erase(toDelete);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void CommandHandler::handleJoin(Client &client, const Command &command) {
+    if (!client.isRegistered())     {
         sendReply(
             client,
-            ":ircserv 451 * :You have not registered"
+            ":ircserv 451 * :You have registered"
         );
         return;
     }
 
-    if (command.getParameters().empty())
-    {
+    if (command.getParameters().empty()) {
         sendReply(
             client,
             ":ircserv 461 "
@@ -345,52 +373,48 @@ void CommandHandler::handleJoin(
         return;
     }
 
-    const std::string &channelName =
-        command.getParameters()[0];
+    const std::string &channelName = command.getParameters()[0];
+    if (channelName == "0") {
+        handleJoinZero(client);
+        return;
+    }
+
+    if (channelName.empty() || channelName[0] != '#') {
+        sendReply(
+            client,
+            ":ircserv 476 "
+            + client.getNickname()
+            + " "
+            + channelName
+            + " :Invalid channel name"
+        );
+        return;
+    }
 
     std::string key;
 
     if (command.getParameters().size() > 1)
         key = command.getParameters()[1];
 
-    Channel *channel =
-        _server.findChannel(channelName);
+    Channel *channel = _server.findChannel(channelName);
 
-    /*
-     * Якщо Server поки НЕ готовий створювати Channel,
-     * цей шматок треба тимчасово закоментувати.
-     */
-    if (channel == NULL)
-    {
-        channel =
-            &_server.createChannel(channelName);
+    if (channel == NULL) {
+        channel = &_server.createChannel(channelName);
     }
 
-    ChannelResult result =
-        channel->addMember(
-            &client,
-            key
-        );
+    ChannelResult result = channel->addMember(&client, key);
 
     if (result == SUCCESS)
     {
-        /*
-         * Person 3 вже додав member.
-         *
-         * TODO:
-         * - broadcast JOIN
-         * - 331/332 topic
-         * - 353 names
-         * - 366 end of names
-         *
-         * Для цього потрібен додатковий API.
-         */
+        const std::string message =
+            buildPrefix(client)
+            + " JOIN :"
+            + channelName;
+
+        sendReply(client, message);
         return;
     }
 
-    /*
-     * Уже member — для JOIN можна просто нічого не робити.
-     */
     if (result == ALREADY_MEMBER)
         return;
 
@@ -402,12 +426,12 @@ void CommandHandler::handleJoin(
     );
 }
 
-void CommandHandler::handlePrivmsg(
-    Client &client,
-    const Command &command)
-{
-    if (!client.isRegistered())
-    {
+// ============================================================================
+//                         HANDLE PRIVMSG
+// ============================================================================
+
+void CommandHandler::handlePrivmsg(Client &client, const Command &command) {
+    if (!client.isRegistered()) {
         sendReply(
             client,
             ":ircserv 451 * :You have not registered"
@@ -415,8 +439,7 @@ void CommandHandler::handlePrivmsg(
         return;
     }
 
-    if (command.getParameters().empty())
-    {
+    if (command.getParameters().empty()) {
         sendReply(
             client,
             ":ircserv 411 "
@@ -426,9 +449,7 @@ void CommandHandler::handlePrivmsg(
         return;
     }
 
-    if (command.getParameters().size() < 2
-        || command.getParameters()[1].empty())
-    {
+    if (command.getParameters().size() < 2 || command.getParameters()[1].empty()) {
         sendReply(
             client,
             ":ircserv 412 "
@@ -438,11 +459,8 @@ void CommandHandler::handlePrivmsg(
         return;
     }
 
-    const std::string &target =
-        command.getParameters()[0];
-
-    const std::string &text =
-        command.getParameters()[1];
+    const std::string &target = command.getParameters()[0];
+    const std::string &text = command.getParameters()[1];
 
     const std::string message =
         ":" + client.getNickname()
@@ -452,16 +470,10 @@ void CommandHandler::handlePrivmsg(
         + target
         + " :" + text;
 
-    /*
-     * CHANNEL PRIVMSG
-     */
-    if (!target.empty() && target[0] == '#')
-    {
-        Channel *channel =
-            _server.findChannel(target);
+    if (!target.empty() && target[0] == '#') {
+        Channel *channel = _server.findChannel(target);
 
-        if (channel == NULL)
-        {
+        if (channel == NULL) {
             sendReply(
                 client,
                 ":ircserv 403 "
@@ -473,8 +485,7 @@ void CommandHandler::handlePrivmsg(
             return;
         }
 
-        if (!channel->isMember(&client))
-        {
+        if (!channel->isMember(&client)) {
             sendReply(
                 client,
                 ":ircserv 404 "
@@ -485,31 +496,17 @@ void CommandHandler::handlePrivmsg(
             );
             return;
         }
-
-        /*
-         * У Channel Person 3 немає broadcast().
-         *
-         * TODO:
-         * Person 1 / Server повинен надати щось типу:
-         *
-         * _server.broadcastChannel(
-         *     channel,
-         *     message,
-         *     &client
-         * );
-         */
-
+        channelMessaging(
+            channel,
+            message,
+            &client
+        );
         return;
     }
 
-    /*
-     * USER PRIVMSG
-     */
-    Client *targetClient =
-        _server.findNick(target);
+    Client *targetClient = _server.findNick(target);
 
-    if (targetClient == NULL)
-    {
+    if (targetClient == NULL) {
         sendReply(
             client,
             ":ircserv 401 "
@@ -525,4 +522,88 @@ void CommandHandler::handlePrivmsg(
         *targetClient,
         message
     );
+}
+
+// ============================================================================
+//                         HANDLE PART
+// ============================================================================
+
+void CommandHandler::handlePart(Client &client, const Command &command) {
+    if (command.getParameters().empty()) {
+        sendReply(
+            client,
+            ":ircserv 461 "
+            + client.getNickname()
+            + " PART :Not enough parameters"
+        );
+        return;
+    }
+
+    const std::string channelName = command.getParameters()[0];
+    Channel *channel = _server.findChannel(channelName);
+
+    if (channel == NULL) {
+        sendReply(
+            client,
+            ":ircserv 403 "
+            + client.getNickname()
+            + " "
+            + channelName
+            + " :No such channel"
+        );
+        return;
+    }
+
+    if (!channel->isMember(&client)) {
+        sendReply(
+            client,
+            ":ircserv 442 "
+            + client.getNickname()
+            + " "
+            + channelName
+            + " :You're not on that channel"
+        );
+        return;
+    }
+
+    std::string message =
+        buildPrefix(client)
+        + " PART "
+        + channelName;
+
+    if (command.getParameters().size() > 1) {
+        message += " :"
+            + command.getParameters()[1];
+    }
+
+    channelMessaging(
+        channel,
+        message
+    );
+
+    ChannelResult result = channel->removeMember(&client);
+
+    if (result == CHANNEL_EMPTY)
+        _server.removeChannel(channelName);
+}
+
+// ============================================================================
+//                         HANDLE QUIT
+// ============================================================================
+
+//TODO: nc: write failed (0/2): Broken pipe
+void CommandHandler::handleQuit(Client &client, const Command &command) {
+    std::string reason = "Leaving";
+
+    if (!command.getParameters().empty())
+        reason = command.getParameters()[0];
+
+    std::string message =
+        ":" + client.getNickname()
+        + "!" + client.getUsername()
+        + "@localhost QUIT :"
+        + reason;
+
+    _server.broadcastQuit(client, message);
+    _server.disconnectClient(client);
 }
