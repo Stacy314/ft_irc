@@ -31,7 +31,7 @@ private:
 		const std::string &channelName, const std::string &target);
 	void channelMessaging(Channel*, const std::string &,
 		Client* receiver = NULL);
-	void channelMessaging(std::vector<Client*>,
+	void channelMessaging(const std::vector<Client*>&,
 		const std::string &, Client* receiver = NULL);
 	void sendNumeric(Client &client, const std::string &code,
                  const std::string &params, const std::string &text);

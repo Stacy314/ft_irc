@@ -28,6 +28,8 @@ void CommandHandler::execute(Client &client, const Command &command) {
         handleInvite(client, command);
     else if (cmd == "KICK")
         handleKick(client, command);
+    else if (cmd == "MODE")
+        handleMode(client, command);
 	else if (cmd == "PART")
        handlePart(client, command);
     else if (cmd == "QUIT")
