@@ -305,6 +305,15 @@ void CommandHandler::handleMode(Client& client, const Command& command)
     }
     else
     {
+		const std::string target = command.getParameters()[0];
+
+		if (target == client.getNickname()) {
+			if (command.getParameters().size() == 1) {
+				sendNumeric(client, "221", "", "+");
+				return;
+			}
+			return;
+		}
         sendNumeric(client, "501", "", "Unknown MODE flag");
     }
 }
