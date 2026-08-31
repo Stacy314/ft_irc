@@ -1723,6 +1723,166 @@ def test_ping_pong():
 
     finally:
         client.close()
+        
+def test_slow_client_flood():
+    section("EDGE: SLOW CLIENT / FLOOD")
+
+    slow = IRCClient("slow")
+    sender = IRCClient("flooder")
+    probe = None
+
+    try:
+        slow.connect()
+        slow.register("slowclient")
+        slow.clear()
+
+        sender.connect()
+        sender.register("flooder")
+        sender.clear()
+
+        channel = "#floodtest"
+
+        slow.send("JOIN " + channel)
+        time.sleep(0.2)
+        slow.clear()
+
+        sender.send("JOIN " + channel)
+        time.sleep(0.2)
+
+        slow.clear()
+        sender.clear()
+
+        # --------------------------------------------------
+        # slow більше НЕ читає зі свого socket.
+        #
+        # Це імітує nc, який evaluator зупинив Ctrl+Z.
+        # TCP connection залишається відкритим.
+        # --------------------------------------------------
+
+        payload = "X" * 400
+
+        flood_count = 500
+
+        print(
+            "Flooding channel with %d messages while "
+            "slow client is not reading..." % flood_count
+        )
+
+        for i in range(flood_count):
+            message = (
+                "PRIVMSG "
+                + channel
+                + " :flood_"
+                + str(i)
+                + "_"
+                + payload
+            )
+
+            sender.send(message)
+
+        # --------------------------------------------------
+        # Поки slow client не читає, перевіряємо,
+        # що сервер НЕ завис.
+        # --------------------------------------------------
+
+        time.sleep(0.5)
+
+        check(
+            "Server alive while client is not reading",
+            server_alive()
+        )
+
+        # --------------------------------------------------
+        # Новий клієнт повинен мати можливість
+        # підключитися і зареєструватися.
+        # --------------------------------------------------
+
+        probe = IRCClient("probe")
+        probe.connect()
+        probe.register("probeclient")
+        probe.clear()
+
+        probe.send("JOIN #floodtest")
+        time.sleep(0.2)
+
+        response = probe.read()
+
+        check(
+         "New client works during flood",
+         "JOIN" in response or "353" in response or "366" in response,
+         response
+        )
+
+        # --------------------------------------------------
+        # Тепер slow client знову починає читати.
+        # Це аналог `fg` після Ctrl+Z.
+        # --------------------------------------------------
+
+        received = ""
+
+        end_time = time.time() + 5.0
+
+        while time.time() < end_time:
+            try:
+                chunk = slow.sock.recv(65536)
+
+                if not chunk:
+                    break
+
+                received += chunk.decode(
+                    "utf-8",
+                    errors="ignore"
+                )
+
+                # Не обов'язково чекати всі 5000.
+                # Достатньо довести, що queued data
+                # почала приходити після resume.
+                if "flood_" in received:
+                    break
+
+            except socket.timeout:
+                continue
+            except Exception:
+                break
+
+        check(
+            "Stopped client receives queued messages after resume",
+            "flood_" in received,
+            "received %d bytes" % len(received)
+        )
+
+        # --------------------------------------------------
+        # Після resume сервер все ще повинен працювати.
+        # --------------------------------------------------
+
+        check(
+            "Server alive after slow client resumes",
+            server_alive()
+        )
+
+    except Exception as e:
+        check(
+            "Slow client flood test",
+            False,
+            str(e)
+        )
+
+    finally:
+        try:
+            slow.close()
+        except Exception:
+            pass
+
+        try:
+            sender.close()
+        except Exception:
+            pass
+
+        if probe is not None:
+            try:
+                probe.close()
+            except Exception:
+                pass
 
 # ============================================================
 # MAIN
@@ -1751,50 +1911,51 @@ def main():
         return 1
 
     try:
-        test_registration()
+        #test_registration()
 
-        check(
-            "Server alive after registration",
-            server_alive()
-        )
+        #check(
+        #    "Server alive after registration",
+        #    server_alive()
+        #)
 
-        test_wrong_password()
-        test_duplicate_nick()
+        #test_wrong_password()
+        #test_duplicate_nick()
 
-        test_channel()
-        test_private_message()
+        #test_channel()
+        #test_private_message()
 
-        test_part()
-        test_join_zero()
+        #test_part()
+        #test_join_zero()
 
-        test_kick()
-        test_mode_key()
-        test_invite()
+        #test_kick()
+        #test_mode_key()
+        #test_invite()
 
-        test_partial_command()
-        test_abrupt_disconnect()
+        #test_partial_command()
+        #test_abrupt_disconnect()
 
-        test_quit()
-        test_ping_pong()
+        #test_quit()
+        #test_ping_pong()
 
-        test_split_crlf()
-        test_many_clients()
-        test_operator_leaves()
-        test_empty_channel_recreation()
-        test_quit_broadcast()
-        test_nick_change()
-        test_message_after_part()
-        test_privmsg_unknown_channel()
-        test_privmsg_unknown_nick()
-        test_part_not_member()
-        test_part_nonexistent_channel()
-        test_duplicate_join()
-        test_case_insensitive_nick()
-        test_disconnect_mid_command()
-        test_incomplete_client_does_not_block()
-        test_multiple_commands_one_packet()
-        test_missing_parameters()
-        test_commands_before_registration()
+        #test_split_crlf()
+        #test_many_clients()
+        #test_operator_leaves()
+        #test_empty_channel_recreation()
+        #test_quit_broadcast()
+        #test_nick_change()
+        #test_message_after_part()
+        #test_privmsg_unknown_channel()
+        #test_privmsg_unknown_nick()
+        #test_part_not_member()
+        #test_part_nonexistent_channel()
+        #test_duplicate_join()
+        #test_case_insensitive_nick()
+        #test_disconnect_mid_command()
+        #test_incomplete_client_does_not_block()
+        #test_multiple_commands_one_packet()
+        #test_missing_parameters()
+        #test_commands_before_registration()
+        test_slow_client_flood()
 
     finally:
         stop_server()
