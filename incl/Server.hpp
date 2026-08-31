@@ -76,4 +76,3 @@ public:
     void broadcastNickChange(Client &client, const std::string &message);
     std::map<std::string, Channel> &getChannels();
 };
-

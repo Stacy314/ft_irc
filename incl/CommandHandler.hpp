@@ -28,6 +28,7 @@ private:
 	void handlePart(Client &client, const Command &command);
 	void handleQuit(Client &client, const Command &command);
 	void handlePing(Client &client, const Command &command);
+	void handleCap(Client &client, const Command &command);
 	void handleChannelResult(Client &client, ChannelResult result,
 		const std::string &channelName, const std::string &target);
 	void channelMessaging(Channel*, const std::string &,
@@ -44,4 +45,3 @@ public:
 	void execute(Client &client, const Command &command);
 	std::string buildPrefix(const Client &client) const;
 };
-

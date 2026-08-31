@@ -34,8 +34,10 @@ void CommandHandler::execute(Client &client, const Command &command) {
        handlePart(client, command);
     else if (cmd == "QUIT")
         handleQuit(client, command);
-    else if (command.getName() == "PING")
+    else if (cmd == "PING")
         handlePing(client, command);
+	else if (cmd == "CAP")
+        handleCap(client, command);
     else
     {
         sendReply(
@@ -215,6 +217,35 @@ void CommandHandler::tryRegister(Client &client) {
         + client.getNickname()
         + " ircserv 1.0 itkol"
     );
+}
+
+// ============================================================================
+//                               HANDLE CAPABILITIES
+// ============================================================================
+
+void CommandHandler::handleCap(Client &client, const Command &command)
+{
+    if (command.getParameters().empty())
+        return;
+
+    const std::string sub = command.getParameters()[0];
+
+    if (sub == "LS") {
+        sendReply(client, ":ircserv CAP * LS :");
+    }
+    else if (sub == "REQ") {
+        std::string requested;
+
+        if (command.getParameters().size() > 1)
+            requested = command.getParameters()[1];
+
+        sendReply(
+            client,
+            ":ircserv CAP * NAK :" + requested
+        );
+    }
+    else if (sub == "END")
+        return;
 }
 
 // ============================================================================
@@ -423,9 +454,49 @@ void CommandHandler::handleJoin(Client &client, const Command &command) {
             + " JOIN :"
             + channelName;
 
-        sendReply(client, message);
+
+        channelMessaging(channel, message);
+
+		std::string names;
+
+		const std::vector<Client *> &members = channel->getMembers();
+
+		for (
+			std::vector<Client *>::const_iterator it = members.begin();
+			it != members.end();
+			++it
+		)
+		{
+			if (!names.empty())
+				names += " ";
+
+			names += (*it)->getNickname();
+		}
+
+		sendReply(
+			client,
+			":ircserv 353 "
+			+ client.getNickname()
+			+ " = "
+			+ channelName
+			+ " :"
+			+ names
+		);
+
+		sendReply(
+			client,
+			":ircserv 366 "
+			+ client.getNickname()
+			+ " "
+			+ channelName
+			+ " :End of /NAMES list"
+		);
+
+
         return;
     }
+
+
 
     if (result == ALREADY_MEMBER)
         return;
