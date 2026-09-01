@@ -682,7 +682,6 @@ void CommandHandler::handlePart(Client &client, const Command &command) {
 //                         HANDLE QUIT
 // ============================================================================
 
-//TODO: nc: write failed (0/2): Broken pipe
 void CommandHandler::handleQuit(Client &client, const Command &command) {
     std::string reason = "Leaving";
 
@@ -698,7 +697,6 @@ void CommandHandler::handleQuit(Client &client, const Command &command) {
     _server.broadcastQuit(client, message);
     _server.disconnectClient(client);
 }
-
 
 // ============================================================================
 //                         HANDLE PING

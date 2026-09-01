@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by <login1>[, <login2>[, <login3>[...]]].*
+*This project has been created as part of the 42 curriculum by apechkov, oltolmac, ishchyro.
 
 # ft_irc / ircserv
 
@@ -54,13 +54,6 @@ JOIN #chat
 PRIVMSG #chat :hello everyone
 ```
 
-Partial packet test:
-
-```sh
-nc -C 127.0.0.1 6667
-com^Dman^Dd
-```
-
 This server waits until a newline is received before processing the rebuilt command.
 
 ## Example client workflow
@@ -103,6 +96,3 @@ INVITE bob #room
 - `man fcntl`
 - Beej's Guide to Network Programming
 
-## AI usage
-
-AI was used to help draft a compact educational implementation, structure the files, produce a README template, and suggest edge cases to test, such as fragmented input and non-blocking write buffering. The project should still be reviewed, tested, and adapted by the student team before submission.

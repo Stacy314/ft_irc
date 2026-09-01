@@ -390,9 +390,7 @@ void Server::broadcastNickChange(Client &client, const std::string &message) {
             member != members.end();
             ++member
         )
-        {
             receivers.insert(*member);
-        }
     }
 
     for (
@@ -401,7 +399,5 @@ void Server::broadcastNickChange(Client &client, const std::string &message) {
         it != receivers.end();
         ++it
     )
-    {
         queue(**it, message + "\r\n");
-    }
 }
