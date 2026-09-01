@@ -173,23 +173,6 @@ void Server::updatePollEvents(int fd)
 	}
 }
 
-// void Server::flushClient(int fd)
-// {
-// 	std::map<int, Client>::iterator it = clients.find(fd);
-// 	if (it == clients.end() || it->second.outbuf.empty())
-// 		return;
-
-// 	ssize_t bytes = send(fd, it->second.outbuf.data(), it->second.outbuf.size(), 0);
-// 	if (bytes > 0)
-// 	{
-// 		it->second.outbuf.erase(0, bytes);
-// 		updatePollEvents(fd);
-// 		return;
-// 	}
-// 	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
-// 		return;
-// 	disconnectClient(Client &client);
-// }
 
 void Server::flushClient(int fd) {
 	std::map<int, Client>::iterator it = clients.find(fd);
@@ -205,37 +188,6 @@ void Server::flushClient(int fd) {
     }
 }
 
-// void Server::reciveCom(int fd)
-// {
-// 	char buffer[1024];
-// 	std::map<int, Client>::iterator it = clients.find(fd);
-// 	if (it == clients.end())
-// 		return;
-
-// 	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
-// 	if (bytes > 0)
-// 	{
-// 		Client &client = it->second;
-// 		client.inbuf.append(buffer, bytes);
-
-// 		std::string::size_type end;
-// 		while ((end = client.inbuf.find("\r\n")) != std::string::npos)
-// 		{
-// 			std::string line = client.inbuf.substr(0, end);
-// 			client.inbuf.erase(0, end + 2);
-// 			if (!line.empty())
-// 			{
-// 				_handler.execute(client, Parser::parse(line));
-// 			}
-// 		}
-// 		return;
-// 	}
-
-// 	if (bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR))
-// 		return;
-
-// 	disconnectClient(Client &client);
-// }
 
 void Server::reciveCom(int fd)
 {

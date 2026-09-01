@@ -9,9 +9,6 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "../incl/CommandTests.hpp"
-#include "../incl/ChannelTests.hpp"
-
 size_t parse_port(const std::string& str)
 {
    std::stringstream ss(str);
@@ -28,19 +25,15 @@ size_t parse_port(const std::string& str)
 
 int main (int argc, char **argv)
 {
-   // runChannelTests();
    if (argc != 3){
-      std::cerr << "Usage: " << argv[0] << " <port> <password>\n";
+      std::cerr  << KRED << "Usage: " << argv[0] << " <port> <password>\n" << KNRM;
       return (1);
    }
-   
-   try
-   {
+   try {
 		Server server(parse_port(argv[1]), argv[2]);
 		server.start();
    }
-   catch(const std::exception& e)
-   {
+   catch(const std::exception& e) {
       std::cerr << KRED << e.what() << KNRM <<  '\n';
       return (1); 
    }

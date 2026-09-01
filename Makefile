@@ -4,7 +4,6 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -MMD -MP -pedantic
 SRC		 = src/main.cpp src/Server.cpp src/Client.cpp \
 		   src/Channel.cpp src/CommandUtils.cpp src/Parser.cpp \
 		   src/Command.cpp src/CommandHandler.cpp \
-		   src/CommandTests.cpp src/ChannelTests.cpp \
 		   src/ChannelCommands.cpp
 OBJ_DIR  = obj
 OBJ      = $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
